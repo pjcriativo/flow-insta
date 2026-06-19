@@ -9,6 +9,7 @@ import { Skeleton } from "../ui/skeleton";
 import { AlarmClockCheck, ExternalLink, LayoutList, Pin, Plus, Send } from "lucide-react";
 import { Button } from "../ui/button";
 import { format, formatDistanceToNow, isPast, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import ChannelAvatar from "../channel-avatar";
 import { EditPostDialog } from "./edit-post-dialog";
@@ -109,7 +110,7 @@ const ListView = ({ setCreatePostModalOpen }: {
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Post processing...")
+      toast.success("Processando post...")
       queryClient.invalidateQueries({
         predicate: (query) => query.queryKey[0] === "posts",
       });
@@ -162,16 +163,16 @@ const ListView = ({ setCreatePostModalOpen }: {
           <Tabs value={activeTab || "draft"} onValueChange={(val) => setActiveTab(val)}>
             <TabsList variant="line" className="space-x-4">
               <TabsTrigger value="draft">
-                Draft {renderTotalBadge(totalDrafts)}
+                Rascunhos {renderTotalBadge(totalDrafts)}
               </TabsTrigger>
               <TabsTrigger value="queue">
-                Queue {renderTotalBadge(totalQueue)}
+                Fila {renderTotalBadge(totalQueue)}
               </TabsTrigger>
               <TabsTrigger value="published">
-                Published {renderTotalBadge(totalPublished)}
+                Publicados {renderTotalBadge(totalPublished)}
               </TabsTrigger>
               <TabsTrigger value="failed">
-                Failed {renderTotalBadge(totalFailed)}
+                Falharam {renderTotalBadge(totalFailed)}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -201,17 +202,17 @@ const ListView = ({ setCreatePostModalOpen }: {
                   <div className="mx-auto flex size-15 items-center justify-center rounded-full bg-muted">
                     <LayoutList className="size-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-semibold capitalize">
-                    No {activeTab === "queue" ? "scheduled" : activeTab} posts yet
+                  <h3 className="text-lg font-semibold">
+                    Nenhum post {activeTab === "queue" ? "agendado" : activeTab === "draft" ? "em rascunho" : activeTab === "published" ? "publicado" : activeTab === "failed" ? "com falha" : ""} ainda
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Connect a channel and create your first post to get started with scheduling.
+                    Conecte um canal e crie seu primeiro post para começar a agendar.
                   </p>
                   <Button size="lg"
                     onClick={() => setCreatePostModalOpen(true)}
                   >
                     <Plus className="size-4" />
-                    Create Post
+                    Criar post
                   </Button>
                 </div>
               </div>
@@ -230,7 +231,7 @@ const ListView = ({ setCreatePostModalOpen }: {
                         lg:grid-cols-[120px_minmax(0,1fr)]">
                             <div>
                               <h5>
-                                {format(scheduleDate, "h:mm a")}
+                                {format(scheduleDate, "HH:mm", { locale: ptBR })}
                               </h5>
                               {/* <div className="flex items-center gap-2 text-muted-foreground">
                                 <Pin className="size-4" />
@@ -243,12 +244,12 @@ const ListView = ({ setCreatePostModalOpen }: {
                                   : "text-muted-foreground"
                               )}>
                                 <Pin className="size-4" />
-                                <span className="capitalize">
+                                <span>
                                   {isPast(scheduleDate) && (post.status === "queue" || post.status === "draft")
-                                    ? "Overdue"
+                                    ? "Atrasado"
                                     : post.status === "draft"
-                                      ? "Draft"
-                                      : "Custom"}
+                                      ? "Rascunho"
+                                      : "Personalizado"}
                                 </span>
                               </div>
                             </div>
@@ -281,7 +282,7 @@ const ListView = ({ setCreatePostModalOpen }: {
                                     />
                                   ) : (
                                     <div className="flex h-full-center justify-center text-sm text-muted-foreground">
-                                      No media
+                                      Sem mídia
                                     </div>
                                   )}
                                 </div>
@@ -293,13 +294,13 @@ const ListView = ({ setCreatePostModalOpen }: {
                                 <p className="text-sm text-muted-foreground">
                                   {post.status === "published" ? (
                                     <>
-                                      Published via <span className="font-medium text-foreground">{channel?.name || "Channel"}</span>
+                                      Publicado via <span className="font-medium text-foreground">{channel?.name || "Canal"}</span>
                                     </>
                                   ) : (
                                     <>
-                                      You created this <span className="font-medium text-foreground">
-                                        {formatDistanceToNow(parseISO(post.created_at))}
-                                      </span> ago
+                                      Você criou este post há <span className="font-medium text-foreground">
+                                        {formatDistanceToNow(parseISO(post.created_at), { locale: ptBR })}
+                                      </span>
                                     </>
                                   )}
                                 </p>
@@ -313,7 +314,7 @@ const ListView = ({ setCreatePostModalOpen }: {
                                         rel="noopener noreferrer"
                                       >
                                         <ExternalLink className="h-4 w-4" />
-                                        View Post
+                                        Ver post
                                       </a>
                                     </Button>
                                   ) : (
@@ -322,7 +323,7 @@ const ListView = ({ setCreatePostModalOpen }: {
                                         onClick={() => handleEditPost(post)}
                                       >
                                         <AlarmClockCheck className="size-4" />
-                                        Reschedule
+                                        Reagendar
                                       </Button>
 
                                       {post.status === "draft" && (
@@ -335,7 +336,7 @@ const ListView = ({ setCreatePostModalOpen }: {
                                           ) : (
                                             <Send className="size-4" />
                                           )}
-                                          Publish Now
+                                          Publicar agora
                                         </Button>
                                       )}
                                     </>

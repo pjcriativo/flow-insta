@@ -169,9 +169,9 @@ export default function AdminUsersPage() {
                     {!u.confirmed && <Badge variant="outline">não confirmado</Badge>}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Criado {new Date(u.createdAt).toLocaleDateString()}
+                    Criado {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                     {u.lastSignInAt &&
-                      ` · último acesso ${new Date(u.lastSignInAt).toLocaleDateString()}`}
+                      ` · último acesso ${new Date(u.lastSignInAt).toLocaleDateString('pt-BR')}`}
                   </div>
                 </div>
 

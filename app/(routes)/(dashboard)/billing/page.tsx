@@ -4,7 +4,7 @@ const BillingPage = () => {
   return (
     <div className="w-full max-w-6xl px-6 py-6 mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Cobrança</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Gerencie sua assinatura e informações de cobrança.
         </p>

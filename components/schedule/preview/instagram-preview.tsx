@@ -74,7 +74,7 @@ export function InstagramPreview({ text, images }: InstagramPreviewProps) {
             </Carousel>
           ) : (
             <div className="flex items-center justify-center w-full h-full text-muted-foreground text-sm">
-              No image provided
+              Nenhuma imagem fornecida
             </div>
           )}
         </div>
@@ -108,7 +108,7 @@ export function InstagramPreview({ text, images }: InstagramPreviewProps) {
           <div className="text-sm">
             <span className="font-semibold mr-2">Flow Insta</span>
             {!text ? (
-              <span className="text-muted-foreground italic">Nothing yet…</span>
+              <span className="text-muted-foreground italic">Nada ainda…</span>
             ) : text.length > CHAR_LIMIT && !isExpanded ? (
               <>
                 {text.slice(0, CHAR_LIMIT)}...{" "}
@@ -116,7 +116,7 @@ export function InstagramPreview({ text, images }: InstagramPreviewProps) {
                   onClick={() => setIsExpanded(true)}
                   className="text-muted-foreground cursor-pointer"
                 >
-                  more
+                  mais
                 </span>
               </>
             ) : (

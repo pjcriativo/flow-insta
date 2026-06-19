@@ -2,6 +2,7 @@
 import * as React from "react"
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar"
 import { format, parse, startOfWeek, getDay, addHours, isBefore, startOfDay } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import { enUS } from "date-fns/locale"
 import { ChevronLeft, ChevronRight, Plus, } from "lucide-react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -15,7 +16,23 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getChannelIcon } from "@/constants/channels"
 import { PostType } from "@/types/post.type"
 
-const locales = { "en-US": enUS }
+const locales = { "pt-BR": ptBR, "en-US": enUS }
+
+// Rótulos do react-big-calendar em português.
+const calendarMessages = {
+  today: "Hoje",
+  previous: "Anterior",
+  next: "Próximo",
+  month: "Mês",
+  week: "Semana",
+  day: "Dia",
+  agenda: "Agenda",
+  date: "Data",
+  time: "Hora",
+  event: "Evento",
+  noEventsInRange: "Nenhum post neste período.",
+  showMore: (total: number) => `+${total} mais`,
+}
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -82,12 +99,12 @@ export function PostCalendar({
               </Button>
             </div>
 
-            <span className="text-base font-semibold">
-              {format(toolbar.date, "MMMM yyyy")}
+            <span className="text-base font-semibold capitalize">
+              {format(toolbar.date, "MMMM yyyy", { locale: ptBR })}
             </span>
 
             <Button variant="outline" size="sm" className="font-medium" onClick={() => toolbar.onNavigate('TODAY')}>
-              Today
+              Hoje
             </Button>
 
             <select
@@ -95,8 +112,8 @@ export function PostCalendar({
               value={view}
               onChange={(e) => onViewChange(e.target.value)}
             >
-              <option value="month">Month</option>
-              <option value="week">Week</option>
+              <option value="month">Mês</option>
+              <option value="week">Semana</option>
             </select>
           </div>
 
@@ -112,6 +129,8 @@ export function PostCalendar({
     <div className={cn("h-full relative flex flex-col min-h-[600px] bg-background")}>
       <Calendar
         localizer={localizer}
+        culture="pt-BR"
+        messages={calendarMessages}
         events={events}
         date={currentDate}
         formats={formats}
@@ -168,7 +187,7 @@ export function PostCalendar({
                       background: color
                     }} />}
                   <span className="text-xs truncate max-w-[100px]">{event?.title}</span>
-                  <span className="font-semibold">{format(event.scheduled_at, "h:mm a")}</span>
+                  <span className="font-semibold">{format(event.scheduled_at, "HH:mm", { locale: ptBR })}</span>
                 </div>
               </>
             )

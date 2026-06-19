@@ -10,9 +10,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "../ui/spinner"
 
 const QUICK_ACTIONS = [
-  { icon: Repeat, label: "Rephrase" },
-  { icon: Minus, label: "Shorten" },
-  { icon: Plus, label: "Expand" },
+  { icon: Repeat, action: "rephrase", label: "Reformular" },
+  { icon: Minus, action: "shorten", label: "Encurtar" },
+  { icon: Plus, action: "expand", label: "Expandir" },
 ]
 
 interface AIAssistantProps {
@@ -40,7 +40,7 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
         }),
       })
       if (!res.ok) {
-        throw new Error("Failed to generate post")
+        throw new Error("Falha ao gerar o post")
       }
       return res.json()
     },
@@ -51,14 +51,14 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
     },
     onError: (error: unknown) => {
       console.error("Generation error:", error)
-      const message = error instanceof Error ? error.message : "Failed to generate post. Please try again."
+      const message = error instanceof Error ? error.message : "Falha ao gerar o post. Tente novamente."
       toast.error(message)
     },
   })
 
-  const handleQuickAction = (label: string) => {
+  const handleQuickAction = (action: string) => {
     generateMutation.mutate({
-      action: label.toLowerCase()
+      action
     })
   }
 
@@ -84,13 +84,13 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
           <Wand2Icon className="h-4 w-4 text-purple-500" />
           <span className="text-sm font-semibold bg-linear-to-r from-purple-500
            to-blue-500 bg-clip-text text-transparent">
-            AI Assistant
+            Assistente de IA
           </span>
         </div>
       </div>
 
       <p className="mb-3 text-sm font-medium">
-        How can I help with this post?
+        Como posso ajudar com este post?
       </p>
 
       {/* Textarea for custom prompt */}
@@ -98,7 +98,7 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
         <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Eg. Promote my photography course to get new signups. Registration closes in 3 days."
+          placeholder="Ex.: Divulgue meu curso de fotografia para conseguir novas inscrições. As inscrições encerram em 3 dias."
           className="w-full min-h-[130px] resize-none"
           disabled={!canUseAI}
         />
@@ -115,23 +115,23 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
           ) : (
             <Wand2Icon className="h-4 w-4" />
           )}
-          Generate
+          Gerar
         </Button>
       </div>
 
       {content && content.trim() && (
         <div className="mt-4">
-          <p className="mb-2 text-xs text-muted-foreground">Quick actions:</p>
+          <p className="mb-2 text-xs text-muted-foreground">Ações rápidas:</p>
           <div className="flex flex-col gap-2">
-            {QUICK_ACTIONS.map(({ icon: Icon, label }) => (
+            {QUICK_ACTIONS.map(({ icon: Icon, action, label }) => (
               <Button
                 key={label}
                 variant="outline"
                 className="justify-start gap-2 text-sm font-normal h-9"
-                onClick={() => handleQuickAction(label)}
+                onClick={() => handleQuickAction(action)}
                 disabled={generateMutation.isPending || !canUseAI}
               >
-                {generateMutation.isPending && generateMutation.variables?.action === label.toLowerCase() ? (
+                {generateMutation.isPending && generateMutation.variables?.action === action ? (
                   <Spinner className="h-4 w-4 text-purple-500" />
                 ) : (
                   <Icon className="h-4 w-4 text-purple-500" />
@@ -146,7 +146,7 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
       {/* Footer */}
       <p className="mt-auto pt-4 text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1">
-          Pro tips: Add context for better results
+          Dica: adicione contexto para obter melhores resultados
         </span>
       </p>
     </div>

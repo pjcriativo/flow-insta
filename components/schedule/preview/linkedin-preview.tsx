@@ -45,7 +45,7 @@ export function LinkedinPreview({ text, images, profileImage, handle }: Linkedin
 
         <div className="text-sm leading-normal whitespace-pre-wrap break-words px-3 mb-3">
           {!text ? (
-            <span className="text-muted-foreground italic">Nothing yet…</span>
+            <span className="text-muted-foreground italic">Nada ainda…</span>
           ) : text.length > CHAR_LIMIT && !isExpanded ? (
             <div className="text-right">
               <span className="text-left block float-left w-full">
@@ -55,7 +55,7 @@ export function LinkedinPreview({ text, images, profileImage, handle }: Linkedin
                 onClick={() => setIsExpanded(true)}
                 className="text-muted-foreground hover:text-primary text-[14px] font-medium"
               >
-                ...more
+                ...mais
               </button>
             </div>
           ) : (
@@ -82,19 +82,19 @@ export function LinkedinPreview({ text, images, profileImage, handle }: Linkedin
         border-t">
           <div className="flex flex-col items-center gap-1 flex-1 ">
             <ThumbsUp className="size-4 -scale-x-100" />
-            <span className="text-xs font-semibold">Like</span>
+            <span className="text-xs font-semibold">Curtir</span>
           </div>
           <div className="flex flex-col items-center gap-1 flex-1 ">
             <MessageCircle className="size-4" />
-            <span className="text-xs font-semibold">Comment</span>
+            <span className="text-xs font-semibold">Comentar</span>
           </div>
           <div className="flex flex-col items-center gap-1 flex-1">
             <Repeat2 className="size-4" />
-            <span className="text-xs font-semibold">Repost</span>
+            <span className="text-xs font-semibold">Repostar</span>
           </div>
           <div className="flex flex-col items-center gap-1 flex-1">
             <Send className="size-4" />
-            <span className="text-xs font-semibold">Send</span>
+            <span className="text-xs font-semibold">Enviar</span>
           </div>
         </div>
       </CardContent>

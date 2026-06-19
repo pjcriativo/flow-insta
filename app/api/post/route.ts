@@ -193,10 +193,10 @@ function formatDayLabel(date:Date){
     tomorrow.setDate(tomorrow.getDate() + 1);
     
     if(date.toDateString() === today.toDateString()) {
-        return "Today";
+        return "Hoje";
     }
     if(date.toDateString() === tomorrow.toDateString()) {
-        return "Tomorrow";
+        return "Amanhã";
     }
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('pt-BR');
 }

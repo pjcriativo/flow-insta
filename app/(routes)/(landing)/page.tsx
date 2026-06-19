@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { ChannelTypeEnum, getChannelIcon } from "@/constants/channels";
 
 const navItems = [
-  "Features",
-  "Channels",
-  "Made for",
-  "Resources",
-  "Pricing",
+  "Recursos",
+  "Canais",
+  "Feito para",
+  "Materiais",
+  "Preços",
 ];
 
 const platformBadges = [
@@ -30,22 +30,22 @@ const platformBadges = [
 ]
 
 const stats = [
-  { value: "8", label: "social platforms supported" },
-  { value: "1", label: "workspace for planning and scheduling" },
-  { value: "AI", label: "built into drafting and publishing" },
+  { value: "8", label: "plataformas suportadas" },
+  { value: "1", label: "espaço para planejar e agendar" },
+  { value: "IA", label: "integrada à criação e publicação" },
 ];
 
 const featurePanels = [
   {
-    title: "The cleanest way to plan your week",
+    title: "A forma mais simples de planejar sua semana",
     description:
-      "See your ideas, drafts, and scheduled posts in one place without juggling tabs and spreadsheets.",
+      "Veja suas ideias, rascunhos e posts agendados em um só lugar, sem ficar pulando entre abas e planilhas.",
     tone: "bg-[#ead6ff]",
   },
   {
-    title: "Customize once, publish everywhere",
+    title: "Personalize uma vez, publique em todo lugar",
     description:
-      "Start with a global draft, fine-tune each channel, and keep every post matched to the platform.",
+      "Comece com um rascunho global, ajuste cada canal e mantenha todos os posts adequados a cada plataforma.",
     tone: "bg-[#d7f2b7]",
   },
 ];
@@ -66,7 +66,7 @@ export default function LandingPage() {
               className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <span>{item}</span>
-              {item !== "Pricing" && <ChevronDown className="h-4 w-4" />}
+              {item !== "Preços" && <ChevronDown className="h-4 w-4" />}
             </button>
           ))}
         </nav>
@@ -75,13 +75,13 @@ export default function LandingPage() {
           {!isSignedIn ? (
             <>
               <Button asChild variant="outline" className="rounded-full px-5">
-                <Link href="/sign-in">Log in</Link>
+                <Link href="/sign-in">Entrar</Link>
               </Button>
               <Button
                 asChild
                 className="rounded-full bg-primary px-5 text-primary-foreground hover:bg-primary/90"
               >
-                <Link href="/sign-up">Get started for free</Link>
+                <Link href="/sign-up">Comece grátis</Link>
               </Button>
             </>
           ) : (
@@ -90,7 +90,7 @@ export default function LandingPage() {
                 asChild
                 className="rounded-full bg-primary px-5 text-primary-foreground hover:bg-primary/90"
               >
-                <Link href="/home">Open workspace</Link>
+                <Link href="/home">Abrir workspace</Link>
               </Button>
             </>
           )}
@@ -135,15 +135,15 @@ export default function LandingPage() {
           <div className="z-10 mx-auto flex max-w-4xl flex-1 flex-col items-center justify-center text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/90 px-4 py-1 text-sm text-muted-foreground shadow-sm">
               <Check className="h-4 w-4 text-primary" />
-              <span>Plan ideas, customize by channel, and publish with AI</span>
+              <span>Planeje ideias, personalize por canal e publique com IA</span>
             </div>
 
             <h1 className="max-w-4xl text-5xl font-semibold tracking-tight text-foreground sm:text-6xl md:text-7xl">
-              Your social media workspace
+              Seu espaço de redes sociais
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-              Draft faster, stay organized, and schedule content across every channel without the usual mess.
+              Crie rascunhos mais rápido, mantenha tudo organizado e agende conteúdo em todos os canais sem a bagunça de sempre.
             </p>
 
             {!isSignedIn ? (
@@ -153,12 +153,12 @@ export default function LandingPage() {
                   className="h-12 rounded-full bg-primary px-6 text-base text-primary-foreground hover:bg-primary/90"
                 >
                   <Link href="/sign-up">
-                    Get started for free
+                    Comece grátis
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-12 rounded-full px-6 text-base">
-                  <Link href="/sign-in">Log in</Link>
+                  <Link href="/sign-in">Entrar</Link>
                 </Button>
               </div>
             ) : (
@@ -168,18 +168,18 @@ export default function LandingPage() {
                   className="h-12 rounded-full bg-primary px-6 text-base text-primary-foreground hover:bg-primary/90"
                 >
                   <Link href="/home">
-                    Open workspace
+                    Abrir workspace
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-12 rounded-full px-6 text-base">
-                  <Link href="/ideas">View ideas</Link>
+                  <Link href="/ideas">Ver ideias</Link>
                 </Button>
               </div>
             )}
 
             <p className="mt-5 text-sm text-muted-foreground">
-              Build drafts once, adapt them per platform, and keep your schedule under control.
+              Crie rascunhos uma vez, adapte por plataforma e mantenha sua agenda sob controle.
             </p>
           </div>
 

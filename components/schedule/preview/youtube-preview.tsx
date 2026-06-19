@@ -41,28 +41,28 @@ export function YoutubePreview({ text, images }: YoutubePreviewProps) {
               <div className="bg-white/10 p-2.5 rounded-full backdrop-blur-md">
                 <ThumbsUp className="size-6 -scale-x-100" />
               </div>
-              <span className="text-[12px] mt-1 font-medium">Like</span>
+              <span className="text-[12px] mt-1 font-medium">Curtir</span>
             </div>
             
             <div className="flex flex-col items-center">
               <div className="bg-white/10 p-2.5 rounded-full backdrop-blur-md">
                 <ThumbsDown className="size-6" />
               </div>
-              <span className="text-[12px] mt-1 font-medium">Dislike</span>
+              <span className="text-[12px] mt-1 font-medium">Não curtir</span>
             </div>
 
             <div className="flex flex-col items-center">
               <div className="bg-white/10 p-2.5 rounded-full backdrop-blur-md">
                 <MessageSquare className="size-6" />
               </div>
-              <span className="text-[12px] mt-1 font-medium">Comment</span>
+              <span className="text-[12px] mt-1 font-medium">Comentar</span>
             </div>
 
             <div className="flex flex-col items-center">
               <div className="bg-white/10 p-2.5 rounded-full backdrop-blur-md">
                 <Share2 className="size-6" />
               </div>
-              <span className="text-[12px] mt-1 font-medium">Share</span>
+              <span className="text-[12px] mt-1 font-medium">Compartilhar</span>
             </div>
           </div>
 
@@ -75,7 +75,7 @@ export function YoutubePreview({ text, images }: YoutubePreviewProps) {
               </Avatar>
               <span className="text-white text-[14px] font-bold">@flowinsta</span>
               <button className="ml-1 bg-white text-black text-[12px] font-bold px-3 py-1.5 rounded-full hover:bg-white/90 transition-colors">
-                Subscribe
+                Inscrever-se
               </button>
             </div>
             

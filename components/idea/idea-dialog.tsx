@@ -76,7 +76,7 @@ const IdeaDialog = ({
                     <div className="flex min-w-0 flex-1 flex-col">
                         <DialogHeader className="shrink-0 flex flex-row items-center justify-between px-5 py-4">
                             <DialogTitle className="text-base font-semibold">
-                                {isEdit ? "Edit Idea" : "Create Idea"}
+                                {isEdit ? "Editar ideia" : "Criar ideia"}
                             </DialogTitle>
                             <div>
                                 <Select value={selectedColumn}
@@ -84,7 +84,7 @@ const IdeaDialog = ({
                                     <SelectTrigger className="min-w-[100px] 
             max-w-[135px] gap-1! mr-5 text-sm">
                                         <Shapes />
-                                        <SelectValue placeholder="Select column" />
+                                        <SelectValue placeholder="Selecionar coluna" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {columns?.map((column) => (
@@ -101,7 +101,7 @@ const IdeaDialog = ({
 
                             <Textarea
                                 value={title}
-                                placeholder="Give your idea a title"
+                                placeholder="Dê um título à sua ideia"
                                 onChange={(e) => setTitle(e.target.value)}
                                 rows={2}
                                 className="w-full min-w-0 border-0 px-0 text-xl! font-semibold
@@ -113,7 +113,7 @@ const IdeaDialog = ({
                             <ContentTextarea
                                 value={description}
                                 onChange={setDescription}
-                                placeholder="Everything begins with an idea"
+                                placeholder="Tudo começa com uma ideia"
                                 images={images}
                                 onImagesChange={setImages}
                                 showAIAssistant={true}
@@ -128,7 +128,7 @@ const IdeaDialog = ({
                                 onClick={handleSave}
                             >
                                 {isSaving && <Spinner />}
-                                Save Idea</Button>
+                                Salvar ideia</Button>
                         </div>
                     </div>
 

@@ -64,13 +64,13 @@ const IdeasList = ({ onSelect }: IdeasListProps) => {
   return (
     <div className="space-y-3 flex flex-col">
       <div className="px-6 flex itms-center justify-between gap-3">
-        <h5 className="font-medium text-base">Ideas</h5>
+        <h5 className="font-medium text-base">Ideias</h5>
         <Select value={selectedGroupId} onValueChange={setSelectedGroupId}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="All groups" />
+            <SelectValue placeholder="Todos os grupos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All groups</SelectItem>
+            <SelectItem value="all">Todos os grupos</SelectItem>
             {groups.map((group) => (
               <SelectItem key={group.id} value={group.id}>
                 {group.title}
@@ -132,7 +132,7 @@ const IdeasList = ({ onSelect }: IdeasListProps) => {
 
         {!isLoading && filteredIdeas.length === 0 && (
           <div className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">
-            No ideas yet.
+            Nenhuma ideia ainda.
           </div>
         )}
       </div>

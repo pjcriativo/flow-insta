@@ -25,12 +25,12 @@ import { useRouter } from 'next/navigation';
 import CreatePostDialog from '@/components/schedule/create-post-dialog';
 
 const mainNav = [
-  { name: "Home", href: "/home", icon: Home },
-  { name: "Schedule", href: "/schedule", icon: Calendar },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Ideas", href: "/ideas", icon: Lightbulb },
-  { name: "Billing", href: "/billing", icon: CreditCard },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Início", href: "/home", icon: Home },
+  { name: "Agenda", href: "/schedule", icon: Calendar },
+  { name: "Análises", href: "/analytics", icon: BarChart3 },
+  { name: "Ideias", href: "/ideas", icon: Lightbulb },
+  { name: "Cobrança", href: "/billing", icon: CreditCard },
+  { name: "Configurações", href: "/settings", icon: Settings },
 ];
 
 const AppSidebar = () => {
@@ -111,7 +111,7 @@ const AppSidebar = () => {
          onClick={() => setIsCreatePostOpen(true)}
         >
             <Plus className="size-4" />
-           {!isCollapsed && <span>New Post</span>}
+           {!isCollapsed && <span>Nova publicação</span>}
         </Button>
       </SidebarHeader>
       <SidebarContent className={cn(!isCollapsed && "px-2")}>
@@ -151,7 +151,7 @@ const AppSidebar = () => {
         {/* {connected channels} */}
          {connectedChannels.length > 0 && (
          <SidebarGroup className={cn(isCollapsed && "px-1")}>
-          <SidebarGroupLabel className='text-sm'>Channels</SidebarGroupLabel>
+          <SidebarGroupLabel className='text-sm'>Canais</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
                {isPending ? (
@@ -194,7 +194,7 @@ const AppSidebar = () => {
 
         {/* {unconnected channels} */}
          <SidebarGroup className={cn(isCollapsed && "px-1")}>
-          <SidebarGroupLabel className='text-sm'>Connect Channels</SidebarGroupLabel>
+          <SidebarGroupLabel className='text-sm'>Conectar canais</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {isPending ? (
@@ -211,7 +211,7 @@ const AppSidebar = () => {
                   return (
                     <SidebarMenuItem key={channel.id}>
                       <SidebarMenuButton asChild
-                       tooltip={`Connect ${channel.name}`}
+                       tooltip={`Conectar ${channel.name}`}
                       >
                        <button
                         className='w-full flex items-center gap-2'
@@ -245,7 +245,7 @@ const AppSidebar = () => {
                     <Button asChild variant="ghost" className='w-full justify-start mt-1'>
                       <Link href="/settings" className='w-full flex items-center gap-2'>
                       <PlusCircleIcon className='size-4'  />
-                      <span className='text-sm'>More channels</span>
+                      <span className='text-sm'>Mais canais</span>
                       </Link>
                     </Button>
                   </SidebarMenuButton>
@@ -259,7 +259,7 @@ const AppSidebar = () => {
       <SidebarFooter>
          <div className="mb-3 text-xs text-muted-foreground">
           <span>
-            {connectedCount}/{totalChannels} channels connected
+            {connectedCount}/{totalChannels} canais conectados
           </span>
         </div>
         <div className="flex items-center gap-2">

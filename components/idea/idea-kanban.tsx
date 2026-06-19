@@ -75,7 +75,7 @@ const IdeaKanban = () => {
         },
         onError: (error) => {
             console.error("Failed to save idea:", error)
-            toast.error("Faild to save idea")
+            toast.error("Falha ao salvar ideia")
         }
     })
 
@@ -92,7 +92,7 @@ const IdeaKanban = () => {
         },
         onError: (error) => {
             console.error("Failed to delete idea", error);
-            toast.error("Failed to delete idea")
+            toast.error("Falha ao excluir ideia")
         }
     })
 
@@ -247,9 +247,9 @@ const IdeaKanban = () => {
             <div className="flex flex-col overflow-hidden">
                 <header className="flex items-center justify-between border-b px-6 py-4">
                     <div>
-                        <h1 className="text-xl font-semibold">Ideas</h1>
+                        <h1 className="text-xl font-semibold">Ideias</h1>
                         <p className="text-sm text-muted-foreground">
-                            Capture and organize your content ideas
+                            Capture e organize suas ideias de conteúdo
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -260,7 +260,7 @@ const IdeaKanban = () => {
                             onClick={() => handleAddIdea(columns[0]?.id ?? "")}
                         >
                             <Plus className="h-4 w-4" />
-                            New Idea
+                            Nova ideia
                         </Button>
                     </div>
                 </header>
@@ -383,7 +383,7 @@ p-2 px-3 transition-colors min-h-0`,
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent>
                                                                         <DropdownMenuItem onClick={() => handleEditIdea(idea, column.id)}>
-                                                                            Edit
+                                                                            Editar
                                                                         </DropdownMenuItem>
                                                                         <DropdownMenuItem
                                                                             className="text-destructive"
@@ -395,7 +395,7 @@ p-2 px-3 transition-colors min-h-0`,
                                                                                 )
                                                                             }}
                                                                         >
-                                                                            Delete
+                                                                            Excluir
                                                                         </DropdownMenuItem>
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>
@@ -420,7 +420,7 @@ p-2 px-3 transition-colors min-h-0`,
                                     className="w-full border-none! h-12! mt-2.5"
                                     >
                                     <Plus className="h-4 w-4" />
-                                    New Idea
+                                    Nova ideia
                                     </Button>
 
                                     {provided.placeholder}

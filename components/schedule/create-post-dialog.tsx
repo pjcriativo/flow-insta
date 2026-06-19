@@ -41,9 +41,9 @@ type ChannelContent = {
 type ActionTabType = "ideas" | "ai" | "preview"
 
 const rightTabs = [
-    { id: "ideas" as ActionTabType, label: "Ideas", icon: Lightbulb },
-    { id: "ai" as ActionTabType, label: "AI Assistant", icon: Wand2 },
-    { id: "preview" as ActionTabType, label: "Preview", icon: ScanEye },
+    { id: "ideas" as ActionTabType, label: "Ideias", icon: Lightbulb },
+    { id: "ai" as ActionTabType, label: "Assistente de IA", icon: Wand2 },
+    { id: "preview" as ActionTabType, label: "Pré-visualização", icon: ScanEye },
 ]
 
 
@@ -122,7 +122,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
             return response.json();
         },
         onSuccess: (data, variables) => {
-            toast.success(`${data.posts.length} post(s) ${variables.status === POST_STATUS.DRAFT ? 'saved to draft' : 'scheduled'} successfully`);
+            toast.success(`${data.posts.length} post(s) ${variables.status === POST_STATUS.DRAFT ? 'salvo(s) como rascunho' : 'agendado(s)'} com sucesso`);
             queryClient.invalidateQueries({
                 predicate: (query) => query.queryKey[0] === "posts",
             });
@@ -130,7 +130,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
         },
         onError: (error: any) => {
             console.log("failed to create post", error)
-            toast.error("Failed to save post")
+            toast.error("Falha ao salvar o post")
         }
     })
 
@@ -231,7 +231,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
 
     const handleIdeaSelect = (idea: any) => {
         if (!hasConnectedChannel) {
-            toast.error("Connect at least one channel to add idea")
+            toast.error("Conecte ao menos um canal para adicionar a ideia")
             return
         }
         if (selectedChannels.length === 0) {
@@ -254,7 +254,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
 
     const handleCreatePost = (status?: PostStatus) => {
         if (selectedChannels.length === 0) {
-            toast.error("Select at least one channel")
+            toast.error("Selecione ao menos um canal")
             return;
         }
         const postToCreate = selectedChannelsList.map((channel) => {
@@ -266,7 +266,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
             }
         })
         if (postToCreate.some((post) => !post.content)) {
-            toast.error("Each selected channel must have content")
+            toast.error("Cada canal selecionado precisa ter conteúdo")
             return
         }
 
@@ -307,7 +307,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
                 <div>
                     <DialogHeader className="px-8 py-3 border-b">
                         <div className="flex items-center justify-between">
-                            <DialogTitle className="font-semibold">Create Post</DialogTitle>
+                            <DialogTitle className="font-semibold">Criar post</DialogTitle>
                             <div className="flex items-center gap-px">
                                 {rightTabs.map((tab) => (
                                     <Button
@@ -335,7 +335,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
                                         className="mb-4 text-[13px] font-medium cursor-pointer"
                                         onClick={handleSelectAll}
                                     >
-                                        {selectedChannels.length === connectedChannels.length ? "Unselect all" : "Select all"}
+                                        {selectedChannels.length === connectedChannels.length ? "Desmarcar todos" : "Selecionar todos"}
                                     </button>
                                 )}
                                 <div className="flex flex-wrap gap-4">
@@ -360,7 +360,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
                                                             )}
                                                             onClick={() => {
                                                                 if (!isConnected) {
-                                                                    toast.error("Please connect the channel first");
+                                                                    toast.error("Conecte o canal primeiro");
                                                                     return;
                                                                 }
 
@@ -379,8 +379,8 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
                                                         </button>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        Preview {channel.name}
-                                                        {!isConnected && <span className="text-primary"> → Connect Channel</span>}
+                                                        Pré-visualizar {channel.name}
+                                                        {!isConnected && <span className="text-primary"> → Conectar canal</span>}
                                                     </TooltipContent>
                                                 </Tooltip>
                                             )
@@ -397,8 +397,8 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
                                         <ContentTextarea
                                             value={globalContent?.text || ""}
                                             images={globalContent?.images || []}
-                                            placeholder="Write your main content here..
-        . It will be copied to channels when you select them"
+                                            placeholder="Escreva seu conteúdo principal aqui..
+        . Ele será copiado para os canais quando você selecioná-los"
                                             minHeight={270}
                                             showAIAssistant={true}
                                             disabled={!hasConnectedChannel}
@@ -450,7 +450,7 @@ truncate flex-1 text-left max-w-[400px]">
                                                                     {content.text}
                                                                 </p>
                                                             ) : (
-                                                                <p className="text-sm tex-muted">What would you like to share</p>
+                                                                <p className="text-sm tex-muted">O que você gostaria de compartilhar</p>
                                                             )}
                                                         </AccordionTrigger>
                                                     )}
@@ -476,14 +476,14 @@ bg-[#ffefd0] px-3 py-1 text-xs text-amber-700
 dark:bg-amber-950/40
 dark:text-amber-400">
                                                                         <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                                                                        <p>Please include at least some text or an attachment.</p>
+                                                                        <p>Inclua ao menos algum texto ou um anexo.</p>
                                                                     </div>
                                                                 )}
 
                                                                 <ContentTextarea
                                                                     value={content?.text || ""}
                                                                     images={content?.images || []}
-                                                                    placeholder="Start writing or get inspired by AI"
+                                                                    placeholder="Comece a escrever ou inspire-se com a IA"
                                                                     minHeight={260}
                                                                     contentClass="text-sm placeholder:opacity-50 pt-0"
                                                                     showAIAssistant={true}
@@ -597,7 +597,7 @@ dark:text-amber-400">
                                 onClick={() => handleCreatePost(POST_STATUS.DRAFT)}
                             >
                                 {createPostMutation.isPending && createPostMutation.variables.status === POST_STATUS.DRAFT && <Spinner />}
-                                Save Draft
+                                Salvar rascunho
                             </Button>
                             <ButtonGroup className="p-0!">
                                 <ScheduleDatePicker
@@ -611,14 +611,14 @@ dark:text-amber-400">
                                         disabled={createPostMutation.isPending || !date || !timeSlot || isDatePassed || isTimeNotAvailable}
                                         onClick={() => {
                                             if (isDatePassed || isTimeNotAvailable) {
-                                                toast.error("Please select a valid date and time")
+                                                toast.error("Selecione uma data e horário válidos")
                                                 return;
                                             }
                                             handleCreatePost()
                                         }}
                                     >
                                         {createPostMutation.isPending && createPostMutation.variables.status === undefined && <Spinner />}
-                                        Schedule Post
+                                        Agendar post
                                     </Button>}
 
                                 />
@@ -626,7 +626,7 @@ dark:text-amber-400">
                         </div>
                     ) : (
                         <Button size="lg" asChild>
-                            <Link href="/settings"> Connect Channel to Post</Link>
+                            <Link href="/settings"> Conectar canal para postar</Link>
                         </Button>
                     )}
                 </DialogFooter>

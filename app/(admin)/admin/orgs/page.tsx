@@ -161,7 +161,7 @@ export default function AdminOrgsPage() {
                   {org.memberCount} membro(s)
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {new Date(org.created_at).toLocaleDateString()}
+                  {new Date(org.created_at).toLocaleDateString('pt-BR')}
                 </span>
               </button>
             ))

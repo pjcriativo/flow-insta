@@ -273,7 +273,7 @@ export default function AdminOverviewPage() {
                   {o.type === "team" ? "B2B" : "B2C"}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {o.created_at ? new Date(o.created_at).toLocaleDateString() : ""}
+                  {o.created_at ? new Date(o.created_at).toLocaleDateString('pt-BR') : ""}
                 </span>
               </div>
             ))

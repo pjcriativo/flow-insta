@@ -25,12 +25,12 @@ const PreviewPanel = ({
   if (!channel) {
     return (
       <div className="flex flex-1 h-full items-center justify-center text-sm text-muted-foreground">
-        Select a channel to preview
+        Selecione um canal para visualizar
       </div>
     )
   }
 
-  const label = `${channel?.name} Preview`
+  const label = `Prévia do ${channel?.name}`
   const imageUrls = content?.images?.map(img => img.url)
 
   const renderPreview = () => {

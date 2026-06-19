@@ -23,7 +23,7 @@ const SchedulePageContent = () => {
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between px-6 pt-4 pb-2">
         <div>
-          <h1 className="text-xl font-semibold">All Channels</h1>
+          <h1 className="text-xl font-semibold">Todos os canais</h1>
         </div>
 
         <div className="flex items-center gap-4">
@@ -42,16 +42,16 @@ const SchedulePageContent = () => {
               className="gap-2 my-px"
             >
               <LayoutList className="size-4" />
-              <span className="text-sm">List</span>
+              <span className="text-sm">Lista</span>
             </ToggleGroupItem>
             <ToggleGroupItem value="calendar">
               <CalendarIcon className="size-4" />
-              <span className="text-sm">Calendar</span>
+              <span className="text-sm">Calendário</span>
             </ToggleGroupItem>
           </ToggleGroup>
           <Button onClick={() => setCreatePostModalOpen(true)}>
             <Plus className="size-4" />
-            Add Post
+            Adicionar post
           </Button>
         </div>
       </header>
@@ -76,7 +76,7 @@ const SchedulePageContent = () => {
 
 const SchedulePage = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div>Carregando...</div>}>
       <NuqsAdapter>
         <SchedulePageContent />
       </NuqsAdapter>

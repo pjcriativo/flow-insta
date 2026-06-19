@@ -27,11 +27,11 @@ interface ScheduleToolbarProps {
 }
 
 const statusOptions = [
-  { id: "all", label: "All Posts" },
-  { id: "draft", label: "Drafts" },
-  { id: "queue", label: "Queue" },
-  { id: "published", label: "Published" },
-  { id: "failed", label: "Failed" },
+  { id: "all", label: "Todos" },
+  { id: "draft", label: "Rascunhos" },
+  { id: "queue", label: "Fila" },
+  { id: "published", label: "Publicados" },
+  { id: "failed", label: "Falharam" },
 ];
 
 const ScheduleToolbar = ({
@@ -62,7 +62,7 @@ const ScheduleToolbar = ({
             <Button variant="ghost" size="lg" className="h-8 gap-1">
               <Copy className="h-3.5 w-3.5" />
               <span className="font-medium text-sm text-muted-foreground!">
-                {statusOptions.find((s) => s.id === selectedStatus)?.label || "All Posts"}
+                {statusOptions.find((s) => s.id === selectedStatus)?.label || "Todos"}
               </span>
               <ChevronDown className="h-3.5 w-3.5" />
             </Button>
@@ -96,7 +96,7 @@ const ScheduleToolbar = ({
           <Button variant="ghost" size="lg" className="h-8 gap-1">
             <LayoutGrid className="h-3.5 w-3.5" />
             <span className="font-medium text-sm text-muted-foreground!">
-              Channels
+              Canais
             </span>
             {channelIds && channelIds?.length > 0 && (
               <Badge variant="default" className="size-4!">
@@ -109,12 +109,12 @@ const ScheduleToolbar = ({
         <PopoverContent className="w-86 p-0" align="end">
           <Command>
             <CommandList>
-              <CommandGroup heading="Connected Channels">
+              <CommandGroup heading="Canais conectados">
                 {connectedChannels?.length === 0 ? (
                   <div className="py-4 px-2 text-center">
-                    <p className="text-xs text-muted-foreground mb-3">No channels connected</p>
+                    <p className="text-xs text-muted-foreground mb-3">Nenhum canal conectado</p>
                     <Button size="sm" className="w-fit px-5" asChild>
-                      <Link href="/settings">Connect Channel</Link>
+                      <Link href="/settings">Conectar canal</Link>
                     </Button>
                   </div>
                 ) : (

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select"
 
 import { format, startOfDay, addMinutes, isSameDay, isBefore } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 interface ScheduleDatePickerProps {
   date: Date | undefined
@@ -140,7 +141,7 @@ export function ScheduleDatePicker({
             <span className="flex-1 flex items-center gap-2 text-sm">
               <CalendarDays className="size-4" />
               <span className="flex items-center gap-1.5 font-semibold">
-                {date ? format(date, "MMMM d") : "Set Date & Time"}
+                {date ? format(date, "d 'de' MMMM", { locale: ptBR }) : "Definir data e hora"}
                 {date && time && <span className="text-muted-foreground">, {time}</span>}
               </span>
             </span>
@@ -156,7 +157,7 @@ export function ScheduleDatePicker({
               disabled={{ before: today }}
               className="p-0 w-full"
               formatters={{
-                formatWeekdayName: (date) => date.toLocaleDateString('en-US', { weekday: 'narrow' })
+                formatWeekdayName: (date) => date.toLocaleDateString('pt-BR', { weekday: 'narrow' })
               }}
               classNames={{
                 month_caption: "flex justify-start items-center h-9 ml-2",
@@ -180,11 +181,11 @@ export function ScheduleDatePicker({
             />
 
             <div className="space-y-1">
-              <h4 className="text-[13px] font-semibold text-foreground/70">Select Time</h4>
+              <h4 className="text-[13px] font-semibold text-foreground/70">Selecionar horário</h4>
               <div className="flex items-center gap-2">
                 <Select value={time} onValueChange={handleTimeChange}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select time" />
+                    <SelectValue placeholder="Selecionar horário" />
                   </SelectTrigger>
                   <SelectContent position="popper" className="max-h-[200px]">
                     {availableTimeOptions.map((time) => (
@@ -212,7 +213,7 @@ export function ScheduleDatePicker({
           <div className="flex items-center justify-end p-4 border-t bg-muted/5">
             <Button size="lg" className="" onClick={() => setOpen(false)}>
               <Check className="size-4" />
-              Done
+              Concluir
             </Button>
           </div>
         </PopoverContent>

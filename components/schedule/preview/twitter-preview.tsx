@@ -24,7 +24,7 @@ export function TwitterPreview({ text, images,profileImage,handle }: TwitterPrev
               <span className="text-xs text-muted-foreground">@{handle || "flowinsta"}</span>
             </div>
             <p className="mt-1 text-sm whitespace-pre-wrap break-words">
-              {text || <span className="text-muted-foreground italic">Nothing yet…</span>}
+              {text || <span className="text-muted-foreground italic">Nada ainda…</span>}
             </p>
             {/* Images display */}
             {images && images.length > 0 && (

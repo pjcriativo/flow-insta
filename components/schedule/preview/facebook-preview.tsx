@@ -27,7 +27,7 @@ export function FacebookPreview({ text, images, profileImage, handle }: Facebook
               <h4 className="text-[15px] font-semibold leading-none">{handle || "Flow Insta"}</h4>
               <span className="flex items-center gap-1 mt-1 
               text-muted-foreground text-xs">
-                Just Now ·
+                Agora mesmo ·
                 <svg viewBox="0 0 12 12" fill="none"
                   xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
                   width="11" height="11">
@@ -45,14 +45,14 @@ export function FacebookPreview({ text, images, profileImage, handle }: Facebook
 
         <div className="px-4 text-[15px] leading-normal whitespace-pre-wrap break-words mb-3">
           {!text ? (
-            <span className="text-muted-foreground italic">Nothing yet…</span>
+            <span className="text-muted-foreground italic">Nada ainda…</span>
           ) : text.length > CHAR_LIMIT && !isExpanded ? (
             <>
               {text.slice(0, CHAR_LIMIT)}... <span
                 onClick={() => setIsExpanded(true)}
                 className="text-muted-foreground font-medium cursor-pointer hover:underline"
               >
-                See More
+                Ver mais
               </span>
             </>
           ) : (
@@ -79,16 +79,16 @@ export function FacebookPreview({ text, images, profileImage, handle }: Facebook
         border-t text-muted-foreground">
           <div className="flex items-center gap-2 flex-1 justify-center">
             <ThumbsUp className="size-4" />
-            <span className="text-sm font-medium">Like</span>
+            <span className="text-sm font-medium">Curtir</span>
           </div>
           <div className="flex items-center gap-2 flex-1 justify-center">
             <MessageCircle className="size-4 transform -rotate-90" />
-            <span className="text-sm font-medium">Comment</span>
+            <span className="text-sm font-medium">Comentar</span>
           </div>
           <div className="flex items-center gap-2 flex-1 justify-center">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
               width="16" height="16"><path d="M10.4572 4.73239C10.4575 3.17424 12.3318 2.3833 13.4483 3.47029L20.9241 10.7499C21.6255 11.4332 21.6352 12.5574 20.9455 13.2527L13.8017 20.4523C12.6938 21.5689 10.7892 20.7846 10.7892 19.2116V16.1005C10.7892 16.058 10.7723 16.0313 10.7613 16.0205C10.7566 16.0158 10.7558 16.0159 10.7558 16.0159C10.7586 16.0169 10.759 16.0162 10.753 16.0168C8.91424 16.1951 6.12671 17.0627 4.29371 19.2469C3.94336 19.6644 3.41256 19.7623 2.98791 19.6338C2.54782 19.5005 2.13109 19.0872 2.14899 18.4777L2.16388 18.1225C2.25931 16.3177 2.69764 14.0823 3.82403 12.1496C5.04429 10.056 7.0713 8.32992 10.247 7.929C10.3139 7.92055 10.3717 7.88837 10.4098 7.84808C10.4454 7.81023 10.4572 7.77326 10.4572 7.7402V4.73239ZM12.0764 7.7402C12.0764 8.70851 11.3132 9.42619 10.4498 9.53521C7.84063 9.86461 6.22509 11.2456 5.22284 12.9653C4.4245 14.3351 4.01611 15.9262 3.85193 17.3654C5.98644 15.3715 8.74684 14.5853 10.5967 14.4059C11.6488 14.304 12.4075 15.1729 12.4075 16.1005V19.2116C12.4075 19.2549 12.4194 19.2785 12.4299 19.2934C12.443 19.3118 12.4652 19.3309 12.4959 19.3436C12.527 19.3564 12.5572 19.3587 12.5796 19.3548C12.5975 19.3516 12.6218 19.3426 12.6522 19.312L19.7959 12.1124C19.8519 12.056 19.851 11.9651 19.7941 11.9097L12.3192 4.63008C12.2886 4.60032 12.2638 4.59211 12.2457 4.58916C12.2234 4.58554 12.1943 4.58843 12.1639 4.60125C12.1334 4.6141 12.1109 4.63293 12.0978 4.65147C12.0874 4.66647 12.0765 4.68994 12.0764 4.73239V7.7402Z" fill="currentColor"></path></svg>
-            <span className="text-sm font-medium">Share</span>
+            <span className="text-sm font-medium">Compartilhar</span>
           </div>
         </div>
       </CardContent>

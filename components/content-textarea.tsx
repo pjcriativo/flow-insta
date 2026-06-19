@@ -32,7 +32,7 @@ interface ContentTextareaProps {
 const ContentTextarea = ({
   value,
   onChange,
-  placeholder = "What's on your mind?",
+  placeholder = "No que você está pensando?",
   contentClass,
   minHeight = 280,
   showAIAssistant = false,
@@ -151,7 +151,7 @@ const ContentTextarea = ({
               <ImagePlus className="h-5 w-5 text-muted-foreground mb-1" />
             )}
             <span className="text-sm text-muted-foreground">
-              {isUploading ? "Uploading..." : "Select File"}
+              {isUploading ? "Enviando..." : "Selecionar arquivo"}
             </span>
           </div>
           <input
@@ -206,7 +206,7 @@ const ContentTextarea = ({
                 >
                   <EmojiPicker.Header className="border-b border-border pb-2">
                     <EmojiPicker.Input
-                      placeholder="Search emoji"
+                      placeholder="Buscar emoji"
                       autoFocus
                       className="h-8 border border-border! bg-background ring-0!"
                     />
@@ -227,7 +227,7 @@ const ContentTextarea = ({
                 disabled={disabled}
               >
                 <Wand2Icon className="h-3.5 w-3.5" />
-                AI Assistant
+                Assistente de IA
               </Button>
             )}
           </div>

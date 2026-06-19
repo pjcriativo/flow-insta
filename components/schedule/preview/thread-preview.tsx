@@ -29,7 +29,7 @@ export function ThreadPreview({ text, images, profileImage, handle }: ThreadPrev
               <span className="text-xs text-muted-foreground">21h</span>
             </div>
             <p className="mt-1 text-sm leading-normal whitespace-pre-wrap break-words">
-              {text || <span className="text-muted-foreground italic">Nothing yet…</span>}
+              {text || <span className="text-muted-foreground italic">Nada ainda…</span>}
             </p>
             
             {/* Images display - Horizontal Scroll based on screenshot */}

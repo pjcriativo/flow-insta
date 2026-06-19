@@ -47,9 +47,9 @@ interface EditPostDialogProps {
 type ActionTabType = "ideas" | "ai" | "preview"
 
 const rightTabs = [
-    { id: "ideas" as ActionTabType, label: "Ideas", icon: Lightbulb },
-    { id: "ai" as ActionTabType, label: "AI Assistant", icon: Wand2 },
-    { id: "preview" as ActionTabType, label: "Preview", icon: ScanEye },
+    { id: "ideas" as ActionTabType, label: "Ideias", icon: Lightbulb },
+    { id: "ai" as ActionTabType, label: "Assistente de IA", icon: Wand2 },
+    { id: "preview" as ActionTabType, label: "Pré-visualização", icon: ScanEye },
 ]
 
 export function EditPostDialog({
@@ -80,11 +80,11 @@ export function EditPostDialog({
                     status
                 })
             });
-            if (!response.ok) throw new Error("Failed to update post");
+            if (!response.ok) throw new Error("Falha ao atualizar o post");
             return response.json();
         },
         onSuccess: (data, variables) => {
-            toast.success(`Post ${variables.status === POST_STATUS.DRAFT ? "saved to drafts" : "rescheduled"} successfully!`);
+            toast.success(`Post ${variables.status === POST_STATUS.DRAFT ? "salvo nos rascunhos" : "reagendado"} com sucesso!`);
             queryClient.invalidateQueries({ queryKey: ["posts"] });
             onOpenChange(false);
         },
@@ -158,7 +158,7 @@ export function EditPostDialog({
                 <div>
                     <DialogHeader className="px-8 py-4 border-b">
                         <div className="flex items-center justify-between">
-                            <DialogTitle className="text-lg font-semibold">Edit Post</DialogTitle>
+                            <DialogTitle className="text-lg font-semibold">Editar post</DialogTitle>
                             <div className="flex items-center gap-px">
                                 {rightTabs.map((tab) => (
                                     <Button
@@ -200,7 +200,7 @@ export function EditPostDialog({
                                             <ContentTextarea
                                                 value={content}
                                                 images={images}
-                                                placeholder="Start writing or get inspired by AI..."
+                                                placeholder="Comece a escrever ou inspire-se com a IA..."
                                                 minHeight={350}
                                                 contentClass="text-[15px] placeholder:opacity-50 pt-0!"
                                                 showAIAssistant={true}
@@ -270,7 +270,7 @@ export function EditPostDialog({
                             disabled={updatePostMutation.isPending}
                         >
                             {updatePostMutation.isPending && updatePostMutation.variables?.status === POST_STATUS.DRAFT && <Spinner />}
-                            Save Draft
+                            Salvar rascunho
                         </Button>
                         <ButtonGroup className="p-0!">
                             <ScheduleDatePicker
@@ -280,7 +280,7 @@ export function EditPostDialog({
                                     className="border py-4.5 px-4"
                                     onClick={() => {
                                         if (isDatePassed || isTimeNotAvailable) {
-                                            toast.error("Please select a valid time")
+                                            toast.error("Selecione um horário válido")
                                             return;
                                         }
                                         handleUpdate()
@@ -288,7 +288,7 @@ export function EditPostDialog({
                                     disabled={updatePostMutation.isPending || !date || !time || isTimeNotAvailable || isDatePassed}
                                 >
                                     {updatePostMutation.isPending && updatePostMutation.variables?.status === undefined && <Spinner />}
-                                    Schedule Post
+                                    Agendar post
                                 </Button>}
                             />
                         </ButtonGroup>

@@ -38,10 +38,10 @@ function ChannelTabContent() {
         if (!connected && !error) return
         queryClient.invalidateQueries({ queryKey: ["channels"] })
         if (connected) {
-            toast.success(`Successfully connected to ${channelType}`)
+            toast.success(`Conectado a ${channelType} com sucesso`)
         }
         if (error) {
-            toast.error(`Failed to connect to ${channelType}`)
+            toast.error(`Falha ao conectar a ${channelType}`)
         }
     }, [queryClient, searchParams])
 
@@ -60,7 +60,7 @@ function ChannelTabContent() {
             window.location.href = url
         },
         onError: (error: Error) => {
-            toast.error(error.message || "Failed to start connection")
+            toast.error(error.message || "Falha ao iniciar a conexão")
         },
     })
 
@@ -76,12 +76,12 @@ function ChannelTabContent() {
             return data
         },
         onSuccess: () => {
-            toast.success("Channel disconnected successfully")
+            toast.success("Canal desconectado com sucesso")
             queryClient.invalidateQueries({ queryKey: ["channels"] })
         },
         onError: (error: Error) => {
             console.error("Disconnect error:", error)
-            toast.error("Failed to disconnect channel")
+            toast.error("Falha ao desconectar o canal")
         },
     })
 
@@ -98,9 +98,9 @@ function ChannelTabContent() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Channels</CardTitle>
+                <CardTitle>Canais</CardTitle>
                 <CardDescription>
-                    Connect your social media accounts to start scheduling
+                    Conecte suas contas de redes sociais para começar a agendar
                 </CardDescription>
             </CardHeader>
 
@@ -158,7 +158,7 @@ function ChannelTabContent() {
                                           disconnectMutation.isPending && disconnectMutation.variables === channel.user_channel_id) && (
                                             <Spinner className='size-4' />
                                         )}
-                                        {channel.connected ? "Disconnect" : "Connect"}
+                                        {channel.connected ? "Desconectar" : "Conectar"}
                                     </Button>
                                 </div>
                             )
@@ -177,7 +177,7 @@ function ChannelTabContent() {
 
 const ChannelsTab = () => {
     return (
-        <Suspense fallback={<div className="text-sm text-muted-foreground">Loading channels...</div>}>
+        <Suspense fallback={<div className="text-sm text-muted-foreground">Carregando canais...</div>}>
             <ChannelTabContent />
         </Suspense>
     )

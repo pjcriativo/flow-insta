@@ -28,7 +28,7 @@ const SettingsPage = () => {
     <div className="w-full">
       <div className="max-w-5xl mx-auto w-full h-full">
         <div className="py-4">
-          <h1 className="text-xl font-semibold">Settings</h1>
+          <h1 className="text-xl font-semibold">Configurações</h1>
         </div>
 
         <div>
@@ -39,18 +39,18 @@ const SettingsPage = () => {
               ">
                 <TabsTrigger value="profile">
                   <User className="size-4" />
-                  Profile</TabsTrigger>
+                  Perfil</TabsTrigger>
                 <TabsTrigger value="channels">
                   <Layers className="size-4" />
-                  Channels</TabsTrigger>
+                  Canais</TabsTrigger>
                 {showTeam && (
                   <TabsTrigger value="team">
                     <Users className="size-4" />
-                    Team</TabsTrigger>
+                    Equipe</TabsTrigger>
                 )}
                 <TabsTrigger value="appearance">
                   <Palette className="size-4" />
-                  Appearance</TabsTrigger>
+                  Aparência</TabsTrigger>
               </TabsList>
             </div>
 
@@ -58,9 +58,9 @@ const SettingsPage = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    Your Profile
+                    Seu perfil
                   </CardTitle>
-                  <CardDescription>Managr youe account information</CardDescription>
+                  <CardDescription>Gerencie as informações da sua conta</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-4">
@@ -97,15 +97,15 @@ const SettingsPage = () => {
             <TabsContent value="appearance">
               <Card>
                 <CardHeader>
-                  <CardTitle>Appearance</CardTitle>
-                  <CardDescription>Customize how Flow Insta looks for you</CardDescription>
+                  <CardTitle>Aparência</CardTitle>
+                  <CardDescription>Personalize a aparência do Flow Insta</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="theme">Dark mode</Label>
+                      <Label htmlFor="theme">Modo escuro</Label>
                       <p className="text-sm text-muted-foreground">
-                        Toggle between light and dark theme
+                        Alterne entre tema claro e escuro
                       </p>
                     </div>
                     <Switch

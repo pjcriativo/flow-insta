@@ -26,7 +26,7 @@ export function BlueSkyPreview({ text, images, profileImage, handle }: BlueSkyPr
             </div>
             
             <p className="mt-1 text-[15px] leading-normal whitespace-pre-wrap wrap-break-word">
-              {text || <span className="text-muted-foreground italic">Nothing yet…</span>}
+              {text || <span className="text-muted-foreground italic">Nada ainda…</span>}
             </p>
 
             {/* Images display */}
