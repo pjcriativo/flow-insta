@@ -4,6 +4,7 @@ import { ImageObject, PostType } from "@/types/post.type";
 import { decrypt, encrypt } from "@/lib/encryption";
 import { refreshOauthToken } from "@/lib/social-oauth";
 import { ChannelTypeEnum } from "@/constants/channels";
+import { canPublish } from "@/lib/approvals/publish-gate";
 
 
 type DuePost = {
@@ -92,6 +93,14 @@ export const publishScheduledPost = inngest.createFunction(
        if(!post){
         logger.error("Post not found", { postId: event.data.postId })
         return { skipped: true, reason: "post_not_found" }
+       }
+
+       // Gate de aprovação: se o post está numa coleção ativa e ainda não foi
+       // aprovado pelo cliente, PULA (não falha o job). Post sem coleção segue.
+       const gate = await step.run("approval-gate", async () => canPublish(post.id))
+       if (!gate.allowed) {
+        logger.info("Post awaiting client approval, skipping", { postId: post.id, reason: gate.reason })
+        return { skipped: true, reason: "awaiting_approval" }
        }
 
        const userChannel = post.user_channels
