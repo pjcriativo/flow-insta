@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { Calendar, CreditCard, Lightbulb, Plus, PlusCircleIcon, Settings } from 'lucide-react';
+import { Calendar, CreditCard, Lightbulb, Plus, PlusCircleIcon, Settings, Shield } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
 import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ const AppSidebar = () => {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const { user, signOut } = useAuthUser()
-  const { activeOrgId } = useActiveOrg()
+  const { activeOrgId, isPlatformAdmin } = useActiveOrg()
   const router = useRouter()
   const [isCreatePostOpen, setIsCreatePostOpen] = useState<boolean>(false)
 
@@ -129,6 +129,19 @@ const AppSidebar = () => {
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
+                    {isPlatformAdmin && (
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild
+                                isActive={pathname.startsWith("/admin")}
+                                tooltip="Admin"
+                            >
+                                <Link href="/admin">
+                                    <Shield className="size-4" />
+                                    <span className='text-sm'>Admin</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    )}
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>

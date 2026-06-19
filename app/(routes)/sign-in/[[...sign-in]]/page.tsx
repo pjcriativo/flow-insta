@@ -40,7 +40,20 @@ const SignInPage = () => {
       toast.error(error.message || "Falha ao entrar");
       return;
     }
-    router.push(redirectTo);
+
+    // Se não houver redirect explícito, super-admins vão para /admin.
+    let destination = redirectTo;
+    if (!searchParams.get("redirect")) {
+      try {
+        const meRes = await fetch("/api/me");
+        const me = await meRes.json();
+        if (me?.isPlatformAdmin) destination = "/admin";
+      } catch {
+        // mantém o destino padrão se a checagem falhar
+      }
+    }
+
+    router.push(destination);
     router.refresh();
   };
 

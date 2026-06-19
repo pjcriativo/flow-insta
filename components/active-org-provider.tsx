@@ -17,6 +17,7 @@ type ActiveOrgContextValue = {
   activeOrg: Organization | null;
   activeOrgId: string | null;
   role: Organization["role"] | null;
+  isPlatformAdmin: boolean;
   isLoading: boolean;
   switchOrg: (orgId: string) => Promise<void>;
   refetch: () => void;
@@ -27,6 +28,7 @@ const ActiveOrgContext = createContext<ActiveOrgContextValue>({
   activeOrg: null,
   activeOrgId: null,
   role: null,
+  isPlatformAdmin: false,
   isLoading: true,
   switchOrg: async () => {},
   refetch: () => {},
@@ -53,6 +55,17 @@ export function ActiveOrgProvider({ children }: { children: React.ReactNode }) {
 
   const orgs = useMemo(() => data?.organizations ?? [], [data]);
 
+  // Flag de super-admin (para mostrar acesso ao /admin).
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    enabled: isSignedIn,
+    queryFn: async () => {
+      const res = await fetch("/api/me");
+      const json = await res.json();
+      return json as { isPlatformAdmin?: boolean };
+    },
+  });
+
   // A org ativa é resolvida pelo servidor (cookie + validação de membership).
   const activeOrg =
     orgs.find((o) => o.id === data?.activeOrgId) ?? orgs[0] ?? null;
@@ -74,6 +87,7 @@ export function ActiveOrgProvider({ children }: { children: React.ReactNode }) {
     activeOrg,
     activeOrgId: activeOrg?.id ?? null,
     role: activeOrg?.role ?? null,
+    isPlatformAdmin: me?.isPlatformAdmin === true,
     isLoading,
     switchOrg,
     refetch,
