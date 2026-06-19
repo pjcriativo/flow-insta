@@ -1,6 +1,7 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
 import { getActiveOrg } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { enforceLimit, planLimitResponse } from "@/lib/plan-limits";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -8,7 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
     try {
-        await getActiveOrg();
+        const { supabase, orgId } = await getActiveOrg();
+        await enforceLimit(supabase, orgId, "ai");
 
         const { businessType, targetAudience } = await request.json()
         if (!businessType || !targetAudience) {
@@ -48,6 +50,8 @@ Return plain text only inside the JSON strings.`,
     } catch (error) {
         const authErr = authErrorResponse(error)
         if (authErr) return authErr
+        const planErr = planLimitResponse(error)
+        if (planErr) return NextResponse.json({ error: planErr.message }, { status: 403 })
         console.error("Error generating ideas:", error)
         return NextResponse.json({ error: "Failed to generate ideas" }, { status: 500 })
     }

@@ -16,6 +16,15 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Building2, Search, Users, FileText, Link2, Lightbulb, Download, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 type AdminOrg = {
@@ -27,10 +36,12 @@ type AdminOrg = {
 };
 
 type OrgDetail = {
-  org: { id: string; name: string; type: string; created_at: string };
+  org: { id: string; name: string; type: string; plan: string; suspended: boolean; created_at: string };
   members: { userId: string; email: string | null; role: string }[];
   stats: { posts: number; connectedChannels: number; ideas: number };
 };
+
+const PLAN_OPTIONS = ["free", "pro", "business"];
 
 export default function AdminOrgsPage() {
   const queryClient = useQueryClient();
@@ -54,6 +65,23 @@ export default function AdminOrgsPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-orgs"] });
       setSelected(null);
       toast.success("Organização excluída");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const updateOrg = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const res = await fetch(`/api/admin/orgs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error("Falha ao atualizar");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org", selected] });
+      queryClient.invalidateQueries({ queryKey: ["admin-orgs"] });
+      toast.success("Organização atualizada");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -155,6 +183,35 @@ export default function AdminOrgsPage() {
               <Skeleton className="h-40 w-full" />
             ) : detail ? (
               <>
+                {/* Plano + suspensão */}
+                <div className="space-y-3 rounded-lg border p-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Plano</Label>
+                    <Select
+                      value={detail.org.plan}
+                      onValueChange={(v) => updateOrg.mutate({ id: detail.org.id, patch: { plan: v } })}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PLAN_OPTIONS.map((p) => (
+                          <SelectItem key={p} value={p} className="capitalize">
+                            {p}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Suspender organização</Label>
+                    <Switch
+                      checked={detail.org.suspended}
+                      onCheckedChange={(v) => updateOrg.mutate({ id: detail.org.id, patch: { suspended: v } })}
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-3 gap-2">
                   <Stat icon={FileText} label="Posts" value={detail.stats.posts} />
                   <Stat icon={Link2} label="Canais" value={detail.stats.connectedChannels} />

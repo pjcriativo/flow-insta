@@ -1,5 +1,6 @@
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { enforceLimit, planLimitResponse } from "@/lib/plan-limits";
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -56,6 +57,9 @@ export async function POST(
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 
+    // Limite de membros do plano (membros atuais + convites contam como +1).
+    await enforceLimit(supabase, orgId, "members");
+
     const token = randomBytes(32).toString("base64url");
 
     // RLS invitations_insert exige owner/admin da org.
@@ -86,6 +90,8 @@ export async function POST(
   } catch (error) {
     const authErr = authErrorResponse(error);
     if (authErr) return authErr;
+    const planErr = planLimitResponse(error);
+    if (planErr) return NextResponse.json({ error: planErr.message }, { status: 403 });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

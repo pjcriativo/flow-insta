@@ -31,6 +31,20 @@ const SignUpPage = () => {
       return;
     }
     setLoading(true);
+
+    // Respeita o controle de cadastros do admin.
+    try {
+      const settingsRes = await fetch("/api/public-settings");
+      const settings = await settingsRes.json();
+      if (settings?.signupsEnabled === false) {
+        setLoading(false);
+        toast.error("Os cadastros estão temporariamente desativados.");
+        return;
+      }
+    } catch {
+      // Em caso de falha na checagem, prossegue (não bloqueia por erro de rede).
+    }
+
     const supabase = getSupabaseBrowserClient();
     const { data, error } = await supabase.auth.signUp({ email, password });
     setLoading(false);

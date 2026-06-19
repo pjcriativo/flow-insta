@@ -1,6 +1,7 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
 import { getActiveOrg } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { enforceLimit, planLimitResponse } from "@/lib/plan-limits";
 import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/idea/content-plan — gera um plano de conteúdo (N ideias) via IA
@@ -9,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const { supabase, orgId, userId } = await getActiveOrg();
+    await enforceLimit(supabase, orgId, "ai");
 
     const { businessType, targetAudience, count = 7 } = await request.json();
     if (!businessType || !targetAudience) {
@@ -79,6 +81,8 @@ Escreva em português. Não use markdown (**, *, #, crases). Texto puro.`,
   } catch (error) {
     const authErr = authErrorResponse(error);
     if (authErr) return authErr;
+    const planErr = planLimitResponse(error);
+    if (planErr) return NextResponse.json({ error: planErr.message }, { status: 403 });
     console.error("Error generating content plan:", error);
     return NextResponse.json({ error: "Falha ao gerar o plano de conteúdo" }, { status: 500 });
   }

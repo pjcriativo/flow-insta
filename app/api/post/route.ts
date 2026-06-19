@@ -1,6 +1,7 @@
 import { POST_STATUS, POST_STATUSES } from "@/constants/post";
 import { getActiveOrg } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { enforceLimit, planLimitResponse } from "@/lib/plan-limits";
 import { ImageObject } from "@/types/post.type";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -105,6 +106,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No valid posts provided" }, { status: 400 })
         }
 
+        // Limite de posts/mês do plano.
+        await enforceLimit(supabase, orgId, "posts", normalizedPosts.length)
+
         const invalidPost = normalizedPosts.find((post) => !post.content);
         if (invalidPost) {
             return NextResponse.json({ error: "Post content is required" }, { status: 400 })
@@ -176,6 +180,8 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         const authErr = authErrorResponse(error)
         if (authErr) return authErr
+        const planErr = planLimitResponse(error)
+        if (planErr) return NextResponse.json({ error: planErr.message }, { status: 403 })
         console.error("Error creating post:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }

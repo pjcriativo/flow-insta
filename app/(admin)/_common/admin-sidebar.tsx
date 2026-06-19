@@ -15,12 +15,15 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Logo from "@/components/logo";
-import { LayoutDashboard, Users, Building2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Users, Building2, ArrowLeft, ShieldCheck, CreditCard, Settings, ScrollText } from "lucide-react";
 
 const nav = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Usuários", href: "/admin/users", icon: Users },
   { name: "Organizações", href: "/admin/orgs", icon: Building2 },
+  { name: "Planos", href: "/admin/plans", icon: CreditCard },
+  { name: "Auditoria", href: "/admin/audit", icon: ScrollText },
+  { name: "Configurações", href: "/admin/settings", icon: Settings },
 ];
 
 export function AdminSidebar() {

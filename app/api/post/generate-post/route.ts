@@ -1,6 +1,7 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
 import { getActiveOrg } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { enforceLimit, planLimitResponse } from "@/lib/plan-limits";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -9,7 +10,8 @@ type ActionType = (typeof ACTIONS)[number];
 
 export async function POST(request:NextRequest){
     try {
-        const { supabase } = await getActiveOrg();
+        const { supabase, orgId } = await getActiveOrg();
+        await enforceLimit(supabase, orgId, "ai");
 
         const {
             action,
@@ -63,6 +65,8 @@ export async function POST(request:NextRequest){
     } catch (error) {
         const authErr = authErrorResponse(error)
         if (authErr) return authErr
+        const planErr = planLimitResponse(error)
+        if (planErr) return NextResponse.json({ error: planErr.message }, { status: 403 })
         return NextResponse.json({ error: "Failed to generate post"},{ status:500})
     }
 }

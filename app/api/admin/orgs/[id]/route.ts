@@ -1,5 +1,6 @@
 import { requirePlatformAdmin, getSupabaseAdminClient } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/admin/orgs/[id] — detalhe da org (membros com email + métricas).
@@ -14,7 +15,7 @@ export async function GET(
 
     const { data: org } = await admin
       .from("organizations")
-      .select("id, name, type, created_at, created_by")
+      .select("id, name, type, plan, suspended, created_at, created_by")
       .eq("id", id)
       .maybeSingle();
 
@@ -53,6 +54,37 @@ export async function GET(
         ideas: ideas.count ?? 0,
       },
     });
+  } catch (error) {
+    const authErr = authErrorResponse(error);
+    if (authErr) return authErr;
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// PATCH /api/admin/orgs/[id] — muda plano e/ou suspende a organização.
+// Body: { plan?: string, suspended?: boolean }
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { userId } = await requirePlatformAdmin();
+    const { id } = await params;
+    const { plan, suspended } = await request.json();
+    const admin = getSupabaseAdminClient();
+
+    const update: Record<string, unknown> = {};
+    if (typeof plan === "string") update.plan = plan;
+    if (typeof suspended === "boolean") update.suspended = suspended;
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
+    }
+
+    const { error } = await admin.from("organizations").update(update).eq("id", id);
+    if (error) return NextResponse.json({ error: "Failed to update org" }, { status: 500 });
+
+    await logAudit({ actorId: userId, action: "org.update", targetType: "org", targetId: id, details: update });
+    return NextResponse.json({ success: true });
   } catch (error) {
     const authErr = authErrorResponse(error);
     if (authErr) return authErr;
