@@ -17,6 +17,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { FileText, Send, TrendingUp } from "lucide-react";
+import { BestTimesCard } from "@/components/best-times-card";
 
 type Analytics = {
   timeline: { date: string; created: number; published: number }[];
@@ -154,6 +155,8 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <BestTimesCard />
 
       <p className="text-xs text-muted-foreground">
         * Métricas de engajamento real (curtidas, alcance) serão adicionadas quando

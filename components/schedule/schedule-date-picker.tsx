@@ -1,11 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { CalendarDays, ChevronDown, Clock, Check } from "lucide-react"
+import { CalendarDays, ChevronDown, Clock, Check, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useQuery } from "@tanstack/react-query"
+import { useActiveOrg } from "@/components/active-org-provider"
 
 import {
   Select,
@@ -52,6 +54,51 @@ export function ScheduleDatePicker({
 }: ScheduleDatePickerProps) {
   const [open, setOpen] = React.useState(false)
   const today = React.useMemo(() => startOfDay(new Date()), [])
+  const { activeOrgId } = useActiveOrg()
+
+  // Melhores horários sugeridos (heurística + histórico da org).
+  const { data: bestTimes } = useQuery({
+    queryKey: ["best-times", activeOrgId],
+    queryFn: async () => {
+      const res = await fetch("/api/best-times")
+      return res.json() as Promise<{
+        perChannel: { slots: { day: number; hour: number }[] }[]
+        personalized: { day: number; hour: number }[]
+      }>
+    },
+  })
+
+  // Preenche data+hora com o PRÓXIMO melhor slot a partir de agora.
+  const applyBestTime = React.useCallback(() => {
+    const slots = [
+      ...(bestTimes?.personalized ?? []),
+      ...(bestTimes?.perChannel ?? []).flatMap((c) => c.slots),
+    ]
+    if (slots.length === 0) return
+    const now = new Date()
+    let best: Date | null = null
+    // Procura o próximo (dia da semana, hora) que cai no futuro, nos próximos 7 dias.
+    for (let addDays = 0; addDays < 8 && !best; addDays++) {
+      const candidate = new Date(now)
+      candidate.setDate(now.getDate() + addDays)
+      const dow = candidate.getDay()
+      const hoursForDay = slots
+        .filter((s) => s.day === dow)
+        .map((s) => s.hour)
+        .sort((a, b) => a - b)
+      for (const h of hoursForDay) {
+        const dt = new Date(candidate)
+        dt.setHours(h, 0, 0, 0)
+        if (dt > now) {
+          best = dt
+          break
+        }
+      }
+    }
+    if (!best) return
+    setDate(startOfDay(best))
+    setTime(format(best, "h:mm a"))
+  }, [bestTimes, setDate, setTime])
 
 
   const availableTimeOptions = React.useMemo(() => {
@@ -149,6 +196,16 @@ export function ScheduleDatePicker({
                   </SelectContent>
                 </Select>
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="mt-1 w-full justify-start gap-2 text-primary hover:text-primary"
+                onClick={applyBestTime}
+              >
+                <Sparkles className="size-3.5" />
+                Usar melhor horário sugerido
+              </Button>
             </div>
           </div>
 
