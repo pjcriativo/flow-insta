@@ -15,6 +15,7 @@ import { EditPostDialog } from "./edit-post-dialog";
 import { toast } from "sonner";
 import { Spinner } from "../ui/spinner";
 import { cn } from "@/lib/utils";
+import { useActiveOrg } from "@/components/active-org-provider";
 
 type TabType = "draft" | "queue" | "published" | "failed";
 
@@ -28,6 +29,7 @@ const ListView = ({ setCreatePostModalOpen }: {
   setCreatePostModalOpen: (open: boolean) => void
 }) => {
   const queryClient = useQueryClient()
+  const { activeOrgId } = useActiveOrg();
   const [activeTab, setActiveTab] = useQueryState("status", {
     defaultValue: "draft"
   })
@@ -67,7 +69,7 @@ const ListView = ({ setCreatePostModalOpen }: {
   const [postsQuery, totalsQuery] = useQueries({
     queries: [
       {
-        queryKey: ["posts", activeTab, channelIds],
+        queryKey: ["posts", activeOrgId, activeTab, channelIds],
         queryFn: async () => {
           const params = new URLSearchParams()
           params.append("group_by_date", "true")
@@ -79,7 +81,7 @@ const ListView = ({ setCreatePostModalOpen }: {
         },
       },
       {
-        queryKey: ["posts", "totals", channelIds],
+        queryKey: ["posts", "totals", activeOrgId, channelIds],
         queryFn: async () => {
           const params = new URLSearchParams()
           if (channelIds.length > 0) params.append("channelIds", channelIds.join(","))

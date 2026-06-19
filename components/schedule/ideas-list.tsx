@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { ImageObject } from "@/types/post.type"
+import { useActiveOrg } from "@/components/active-org-provider"
 
 interface Idea {
   id: string
@@ -28,9 +29,10 @@ interface IdeaGroup {
 
 const IdeasList = ({ onSelect }: IdeasListProps) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>("all")
+  const { activeOrgId } = useActiveOrg()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ideas"],
+    queryKey: ["ideas", activeOrgId],
     queryFn: async () => {
       const res = await fetch("/api/idea")
       if (!res.ok) throw new Error("Failed to fetch ideas")

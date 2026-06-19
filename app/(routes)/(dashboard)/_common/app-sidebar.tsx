@@ -14,6 +14,8 @@ import { getChannelIcon, getChannelUrl } from '@/constants/channels';
 import { ChannelType } from '@/types/channel.type';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { useAuthUser } from '@/components/auth-provider';
+import { useActiveOrg } from '@/components/active-org-provider';
+import { OrgSwitcher } from './org-switcher';
 import ChannelAvatar from '@/components/channel-avatar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut } from 'lucide-react';
@@ -34,6 +36,7 @@ const AppSidebar = () => {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const { user, signOut } = useAuthUser()
+  const { activeOrgId } = useActiveOrg()
   const router = useRouter()
   const [isCreatePostOpen, setIsCreatePostOpen] = useState<boolean>(false)
 
@@ -67,7 +70,7 @@ const AppSidebar = () => {
   })
 
   const {data:channelsData, isPending} = useQuery({
-    queryKey: ["channels"],
+    queryKey: ["channels", activeOrgId],
     queryFn: async () => {
       const res = await fetch("/api/channel");
       const data = await res.json();
@@ -97,6 +100,9 @@ const AppSidebar = () => {
         <div className='flex items-center justify-between'>
            <Logo hideName={isCollapsed} />
            <SidebarTrigger className="hidden md:flex -mx-8 mb-0" />
+        </div>
+        <div className="mt-3">
+          <OrgSwitcher collapsed={isCollapsed} />
         </div>
         <Button className='mt-4 w-full'
          size={isCollapsed ? "icon": "lg"}

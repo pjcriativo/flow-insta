@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import IdeaDialog from "./idea-dialog"
 import { IdeaType } from "@/types/idea.type"
 import { GenerateIdeasPopover } from "./generate-ideas-popover"
+import { useActiveOrg } from "@/components/active-org-provider"
 
 type Column = {
     id: string
@@ -29,13 +30,14 @@ type Column = {
 
 const IdeaKanban = () => {
     const queryClient = useQueryClient()
+    const { activeOrgId } = useActiveOrg()
     const [columns, setColumns] = useState<Column[]>([])
     const [showIdeaDialog, setShowIdeaDialog] = useState<boolean>(false)
     const [selectedIdea, setSelectedIdea] = useState<IdeaType | null>(null)
     const [selectedColumnId, setSelectedColumnId] = useState<string>("")
 
     const { data: ideaData, isPending } = useQuery({
-        queryKey: ["ideas"],
+        queryKey: ["ideas", activeOrgId],
         queryFn: async () => {
             const res = await fetch("/api/idea")
             if (!res.ok) throw new Error("Failed to fetch ideas")

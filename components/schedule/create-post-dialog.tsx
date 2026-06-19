@@ -25,6 +25,7 @@ import { ScheduleDatePicker } from "./schedule-date-picker";
 import Link from "next/link";
 import { Spinner } from "../ui/spinner";
 import { AIAssistant } from "./ai-assitant";
+import { useActiveOrg } from "@/components/active-org-provider";
 
 type PropsType = {
     open: boolean
@@ -49,6 +50,7 @@ const rightTabs = [
 const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
 
     const queryClient = useQueryClient();
+    const { activeOrgId } = useActiveOrg();
     const [globalContent, setGlobalContent] = useState<ChannelContent>({ text: "", images: [] })
     const [channelContent, setChannelContent] = useState<Record<string, ChannelContent>>({})
     const [selectedChannels, setSelectedChannels] = useState<string[]>([])
@@ -59,7 +61,7 @@ const CreatePostDialog = ({ open, onOpenChange, selectedDate }: PropsType) => {
     const [timeSlot, setTimeSlot] = useState<string>("")
 
     const { data, isPending } = useQuery({
-        queryKey: ["channels"],
+        queryKey: ["channels", activeOrgId],
         queryFn: async () => {
             const res = await fetch("/api/channel");
             const data = await res.json();

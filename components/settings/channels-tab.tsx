@@ -13,13 +13,15 @@ import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { Spinner } from '../ui/spinner';
+import { useActiveOrg } from "@/components/active-org-provider";
 
 function ChannelTabContent() {
     const searchParams = useSearchParams()
     const queryClient = useQueryClient()
+    const { activeOrgId } = useActiveOrg();
 
     const { data: channelsData, isPending } = useQuery({
-        queryKey: ["channels"],
+        queryKey: ["channels", activeOrgId],
         queryFn: async () => {
             const res = await fetch("/api/channel");
             const data = await res.json();

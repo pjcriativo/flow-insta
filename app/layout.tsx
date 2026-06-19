@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/components/auth-provider";
+import { ActiveOrgProvider } from "@/components/active-org-provider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -44,19 +45,20 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <AuthProvider>
           <QueryProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <TooltipProvider>
-                {children}
-              </TooltipProvider>
+            <ActiveOrgProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <TooltipProvider>
+                  {children}
+                </TooltipProvider>
 
-              <Toaster  richColors/>
-            </ThemeProvider>
-
+                <Toaster  richColors/>
+              </ThemeProvider>
+            </ActiveOrgProvider>
           </QueryProvider>
 
         </AuthProvider>

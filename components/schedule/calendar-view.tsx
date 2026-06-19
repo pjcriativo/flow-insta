@@ -9,10 +9,12 @@ import { PostCalendar } from "./post-calendar"
 import ScheduleToolbar from "./schedule-toolbar"
 import CreatePostDialog from "./create-post-dialog"
 import { EditPostDialog } from "./edit-post-dialog"
+import { useActiveOrg } from "@/components/active-org-provider"
 
 type ViewType = "month" | "week"
 
 const CalendarView = () => {
+  const { activeOrgId } = useActiveOrg()
   const [view, setView] = useQueryState("view", { defaultValue: "month" })
   const [channelIds, setChannelIds] = useQueryState("channelIds", {
     defaultValue: [],
@@ -31,7 +33,7 @@ const CalendarView = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const { data, isFetching:isPending } = useQuery({
-    queryKey: ["posts", selectedStatus, channelIds],
+    queryKey: ["posts", activeOrgId, selectedStatus, channelIds],
     queryFn: async () => {
       const params = new URLSearchParams()
       if (selectedStatus && selectedStatus !== "all") {
