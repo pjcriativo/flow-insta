@@ -49,7 +49,12 @@ export const AssetCopySchema = z.object({
     .min(2)
     .max(10),
   story: z.string().min(1).max(500),
-  hashtags: z.array(z.string().regex(/^#?\w+$/)).min(1).max(30),
+  // Hashtags: aceita unicode (acentos), com ou sem '#'. A IA real gera
+  // hashtags como "#produção", "#marketingdigital" — \w (ASCII) as rejeitava.
+  hashtags: z
+    .array(z.string().regex(/^#?[\p{L}\p{N}_]+$/u, "Hashtag inválida"))
+    .min(1)
+    .max(30),
 });
 export type AssetCopy = z.infer<typeof AssetCopySchema>;
 

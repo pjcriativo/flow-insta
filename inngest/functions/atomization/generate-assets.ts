@@ -20,7 +20,7 @@ export const atomizationGenerateAssets = inngest.createFunction(
 
       await step.run("status-generating", () => setJobStatus(jobId, "generating"));
 
-      await step.run("generate", async () => {
+      const summary = await step.run("generate", async () => {
         const admin = getSupabaseAdminClient();
         const orgId = job.organization_id;
 
@@ -33,6 +33,9 @@ export const atomizationGenerateAssets = inngest.createFunction(
 
         const voice = await getVoiceInstruction(admin, orgId);
 
+        let succeeded = 0;
+        let skipped = 0;
+
         for (const clip of clips ?? []) {
           // Idempotência: se já existe asset reel_caption para o clip, pula.
           const { data: existingAsset } = await admin
@@ -41,22 +44,15 @@ export const atomizationGenerateAssets = inngest.createFunction(
             .eq("clip_id", clip.id)
             .eq("asset_type", "reel_caption")
             .maybeSingle();
-          if (existingAsset) continue;
+          if (existingAsset) { succeeded++; continue; }
 
-          // Gera copy.
-          const completion = await getOpenAI().chat.completions.create({
-            model: AI_MODEL,
-            response_format: { type: "json_object" },
-            messages: [
-              { role: "system", content: assetCopyPrompt(voice) },
-              { role: "user", content: `Gancho: ${clip.hook_text ?? ""}\nContexto: ${clip.rationale ?? ""}` },
-            ],
-          });
-          const parsed = parseAiJson(AssetCopySchema, completion.choices[0]?.message?.content);
-          if (!parsed.ok) {
-            throw new Error(`Copy inválida: ${parsed.error}`);
+          // Gera copy (com 1 re-tentativa pedindo correção do formato).
+          const copy = await generateCopyForClip(orgId, voice, clip);
+          if (!copy) {
+            // Copy inválida mesmo após retry: pula este clip (não derruba o job).
+            skipped++;
+            continue;
           }
-          const copy = parsed.data;
 
           // Cria UM post draft por clip (idempotente: já checamos asset acima).
           // organization_id SEMPRE do job; sem canal definido ainda.
@@ -91,15 +87,24 @@ export const atomizationGenerateAssets = inngest.createFunction(
             })),
             { onConflict: "clip_id,asset_type", ignoreDuplicates: true }
           );
+          succeeded++;
         }
+
+        return { succeeded, skipped, total: (clips ?? []).length };
       });
+
+      // Se nenhum clip gerou copy válida, falha o job de forma limpa.
+      if (summary.succeeded === 0 && summary.total > 0) {
+        await failJob(jobId, "Não foi possível gerar copy válida para nenhum clip");
+        return { ok: false };
+      }
 
       await step.sendEvent("to-schedule", {
         name: "atomization/assets.generated",
         data: { jobId, organizationId: job.organization_id },
       });
 
-      logger.info("Assets generated", { jobId });
+      logger.info("Assets generated", { jobId, summary });
       return { ok: true };
     } catch (e) {
       await failJob(jobId, e instanceof Error ? e.message : "Falha ao gerar ativos");
@@ -107,3 +112,33 @@ export const atomizationGenerateAssets = inngest.createFunction(
     }
   }
 );
+
+/**
+ * Gera e valida a copy de um clip. Tenta uma vez; se a saída da IA não bate
+ * com AssetCopySchema, tenta mais uma vez reforçando o formato. Retorna null
+ * se ambas falharem (o clip é pulado, sem derrubar o pipeline).
+ */
+async function generateCopyForClip(
+  _orgId: string,
+  voice: string,
+  clip: { hook_text: string | null; rationale: string | null }
+) {
+  const user = `Gancho: ${clip.hook_text ?? ""}\nContexto: ${clip.rationale ?? ""}`;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const reinforce =
+      attempt === 0
+        ? ""
+        : " IMPORTANTE: hashtags devem ser uma única palavra cada (sem espaços), o carrossel precisa de 3 a 6 slides.";
+    const completion = await getOpenAI().chat.completions.create({
+      model: AI_MODEL,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: assetCopyPrompt(voice) + reinforce },
+        { role: "user", content: user },
+      ],
+    });
+    const parsed = parseAiJson(AssetCopySchema, completion.choices[0]?.message?.content);
+    if (parsed.ok) return parsed.data;
+  }
+  return null;
+}
