@@ -114,6 +114,18 @@ const SettingsPage = () => {
                       onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
                     />
                   </div>
+
+                  <div className="flex items-center justify-between border-t pt-6">
+                    <div className="space-y-0.5">
+                      <Label>Marca (white-label)</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Logo, cores e domínio próprio nas páginas de aprovação
+                      </p>
+                    </div>
+                    <Button variant="outline" asChild>
+                      <a href="/configuracoes/marca">Personalizar</a>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
