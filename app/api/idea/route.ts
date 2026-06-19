@@ -1,17 +1,17 @@
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET() {
     try {
-        const { supabase, userId } = await getSupabaseServerClient();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const { supabase, orgId } = await getActiveOrg();
 
     const [ideasRes, groupsRes] = await Promise.all([
          supabase
          .from("ideas")
          .select("*")
-         .eq("user_id", userId)
+         .eq("org_id", orgId)
          .order("sort_order", { ascending: true })
          .order("created_at", { ascending: false }),
          supabase
@@ -43,6 +43,8 @@ export async function GET() {
 
     return NextResponse.json({ groups });
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         console.error("Error fetching ideas or groups:", error);
         return NextResponse.json({ error: "Failed to fetch ideas or groups" }, { status: 500 });
     }
@@ -50,10 +52,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
-        const { supabase, userId } = await getSupabaseServerClient();
-        if (!userId) {
-            return NextResponse.json({ error: "User not found" }, { status: 401 });
-        }
+        const { supabase, orgId, userId } = await getActiveOrg();
 
         const {
             id,
@@ -69,6 +68,7 @@ export async function POST(request: NextRequest) {
         }
 
         const payload = {
+            org_id: orgId,
             user_id: userId,
             group_id: groupId,
             title: title,
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
                 .from("ideas")
                 .update(payload)
                 .eq("id", id)
-                .eq("user_id", userId)
+                .eq("org_id", orgId)
                 .select()
                 .single();
 
@@ -108,6 +108,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ data });
 
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         console.error("Error upserting idea:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }

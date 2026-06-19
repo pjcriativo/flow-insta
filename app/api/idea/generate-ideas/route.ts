@@ -1,5 +1,6 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -7,10 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
     try {
-        const { userId } = await getSupabaseServerClient();
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        await getActiveOrg();
 
         const { businessType, targetAudience } = await request.json()
         if (!businessType || !targetAudience) {
@@ -48,6 +46,8 @@ Return plain text only inside the JSON strings.`,
         return NextResponse.json({ ideas })
 
     } catch (error) {
+        const authErr = authErrorResponse(error)
+        if (authErr) return authErr
         console.error("Error generating ideas:", error)
         return NextResponse.json({ error: "Failed to generate ideas" }, { status: 500 })
     }

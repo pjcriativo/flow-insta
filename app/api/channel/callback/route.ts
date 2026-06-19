@@ -69,6 +69,20 @@ export async function GET(request: NextRequest) {
             return response
         }
 
+        // Defense-in-depth: confirma que o usuário ainda é membro da org do state
+        // (o state é assinado por HMAC, mas a membership pode ter mudado no meio).
+        const { data: isMember } = await supabase.rpc("is_org_member", {
+            p_org_id: state.orgId,
+        })
+        if (!isMember) {
+            const response = buildRedirectUrl(APP_URL, redirectTo, {
+                connected: "false",
+                error: "not_org_member"
+            })
+            response.cookies.delete(pkceCookieName)
+            return response
+        }
+
         const provider = getOAuthProvider(state.channelType) as OAuthProvider;
         const redirectUri = `${APP_URL}/api/channel/callback`;
 
@@ -86,6 +100,7 @@ export async function GET(request: NextRequest) {
 
 
         const payload = {
+            org_id: state.orgId,
             user_id: state.userId,
             channel_type_id: state.channelTypeId,
             provider_account_id: profile.providerAccountId ?? null,
@@ -101,7 +116,7 @@ export async function GET(request: NextRequest) {
         const { error } = await supabase
             .from("user_channels")
             .upsert(payload, {
-                onConflict: "user_id,channel_type_id"
+                onConflict: "org_id,channel_type_id"
             })
 
         if (error) {

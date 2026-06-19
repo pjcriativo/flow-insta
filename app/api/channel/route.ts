@@ -1,11 +1,11 @@
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
 
     try {
-        const {supabase, userId} = await getSupabaseServerClient()
-        if(!userId) return new NextResponse('Unauthorized', { status: 401 })
+        const {supabase, orgId} = await getActiveOrg()
 
         const filter = request.nextUrl.searchParams.get('filter')
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
             .order("created_at", { ascending: true }),
             supabase.from("user_channels")
             .select("*")
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
         ]);
 
         if (typesRes.error || userChannelsRes.error) {
@@ -63,6 +63,8 @@ export async function GET(request: NextRequest) {
         })
         
     } catch (error) {
+        const authErr = authErrorResponse(error)
+        if (authErr) return authErr
         console.error('Error fetching channels:', error)
         return new NextResponse('Internal Server Error', { status: 500 })
     }

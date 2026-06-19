@@ -9,6 +9,7 @@ if(!OAUTH_STATE_SECRET) {
 
 export type OAuthStatePayload = {
   userId: string
+  orgId: string
   channelTypeId: string
   channelType: ChannelTypeEnum
   redirectTo?: string

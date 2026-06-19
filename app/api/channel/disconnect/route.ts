@@ -1,13 +1,11 @@
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
 export async function POST(request: NextRequest) {
     try {
-        const { supabase, userId } = await getSupabaseServerClient();
-        if (!userId) {
-            return NextResponse.json({ error: "User not authenticated" }, { status: 401 });
-        }
+        const { supabase, orgId } = await getActiveOrg();
         const { userChannelId } = await request.json();
 
         if (!userChannelId) {
@@ -17,10 +15,10 @@ export async function POST(request: NextRequest) {
         const { data: userChannelData, error } = await supabase
             .from("user_channels")
             .select(
-                "id, user_id"
+                "id, org_id"
             )
             .eq("id", userChannelId)
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
             .single();
 
         if (error || !userChannelData) {
@@ -37,7 +35,7 @@ export async function POST(request: NextRequest) {
                 is_active: false
             })
             .eq("id", userChannelId)
-            .eq("user_id", userId);
+            .eq("org_id", orgId);
 
         if (updateError) {
             throw updateError
@@ -45,6 +43,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true })
 
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         console.error("Error disconnecting channel:", error);
         return NextResponse.json({ error: "Failed to disconnect channel" }, { status: 500 });
     }

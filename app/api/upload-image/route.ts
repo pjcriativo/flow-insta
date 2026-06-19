@@ -1,4 +1,5 @@
-import { getSupabaseServerClient, getSupabaseUploadClient } from "@/lib/supabase-server";
+import { getActiveOrg, getSupabaseUploadClient } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextResponse } from "next/server";
 
 // Supabase Storage bucket used for post/idea images. Create it (public) in
@@ -11,10 +12,7 @@ function sanitizeFileName(name: string) {
 
 export async function POST(request: Request) {
     try {
-        const { userId } = await getSupabaseServerClient();
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { orgId } = await getActiveOrg();
         const supabase = getSupabaseUploadClient();
         const formData = await request.formData();
         const file = formData.get("file") as File;
@@ -26,7 +24,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "File must be an image" }, { status: 400 });
         }
 
-        const key = `images/${userId}/${Date.now()}-${sanitizeFileName(file.name)}`;
+        const key = `images/${orgId}/${Date.now()}-${sanitizeFileName(file.name)}`;
         const { data, error } = await supabase.storage
             .from(STORAGE_BUCKET)
             .upload(key, file, {
@@ -50,6 +48,8 @@ export async function POST(request: Request) {
         });
 
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         console.error("Error uploading image:", error);
         return NextResponse.json({ error: "Failed to upload image" }, { status: 500 });
     }

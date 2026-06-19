@@ -1,5 +1,6 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -8,10 +9,7 @@ type ActionType = (typeof ACTIONS)[number];
 
 export async function POST(request:NextRequest){
     try {
-        const { supabase, userId } = await getSupabaseServerClient();
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { supabase } = await getActiveOrg();
 
         const {
             action,
@@ -63,6 +61,8 @@ export async function POST(request:NextRequest){
         const text = result.choices[0]?.message?.content ?? "";
         return NextResponse.json({ content: text})
     } catch (error) {
+        const authErr = authErrorResponse(error)
+        if (authErr) return authErr
         return NextResponse.json({ error: "Failed to generate post"},{ status:500})
     }
 }

@@ -1,17 +1,17 @@
 import { ChannelTypeEnum } from "@/constants/channels";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { getOAuthProvider } from "@/lib/social-oauth";
 import { createPkcePair, getPkceCookieName } from "@/lib/social-oauth/pkce";
 import { createOAuthState } from "@/lib/social-oauth/state";
 import { NextRequest, NextResponse } from "next/server";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL
 
 export async function POST(request: NextRequest) {
     try {
-    
-        const {supabase, userId} = await getSupabaseServerClient();
-        if (!userId) return NextResponse.json({ error: 'User not found' }, { status: 401 });
+
+        const {supabase, orgId, userId} = await getActiveOrg();
 
         const {channelTypeId} = await request.json();
         if(!channelTypeId) return NextResponse.json({ error: 'Channel type ID is required' }, { status: 400 });
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
             const provider = getOAuthProvider(channelType.type as ChannelTypeEnum);
             const state = createOAuthState({
                 userId,
+                orgId,
                 channelTypeId: channelType.id,
                 channelType: channelType.type,
                 redirectTo,
@@ -64,6 +65,8 @@ export async function POST(request: NextRequest) {
            return response;
         
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         console.error('Error connecting channel:', error);
         return NextResponse.json({ error: 'Failed to connect channel' }, { status: 500 });
     }

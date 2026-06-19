@@ -1,5 +1,6 @@
 import { POST_STATUS } from "@/constants/post";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -9,8 +10,7 @@ export async function PATCH(request:NextRequest,
 ){
     try {
         const { id } = await params;
-        const { supabase, userId } = await getSupabaseServerClient();
-        if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const { supabase, orgId } = await getActiveOrg();
 
         const {
             content,
@@ -30,7 +30,7 @@ export async function PATCH(request:NextRequest,
         .from("scheduled_posts")
         .update(updateData)
         .eq("id", id)
-        .eq("user_id", userId)
+        .eq("org_id", orgId)
         .select()
         .single()
         
@@ -41,6 +41,8 @@ export async function PATCH(request:NextRequest,
         
         return NextResponse.json({ post:data});
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         console.error("Error updating post:", error);
         return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }

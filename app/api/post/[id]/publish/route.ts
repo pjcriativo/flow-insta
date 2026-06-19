@@ -1,5 +1,6 @@
 import { inngest } from "@/inngest/client";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextResponse } from "next/server";
 
 
@@ -9,16 +10,13 @@ export async function POST(
 ) {
     try {
         const {id} = await params;
-        const {supabase, userId} = await getSupabaseServerClient();
-        if(!userId) {
-            return NextResponse.json({error:"Unauthorized"}, {status:401});
-        }
+        const {supabase, orgId} = await getActiveOrg();
 
         const {data: post, error: postError} = await supabase
             .from("scheduled_posts")
             .select("id, status")
             .eq("id", id)
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
             .single();
         
         if(postError || !post) {
@@ -35,7 +33,7 @@ export async function POST(
                 scheduled_at: new Date().toISOString()
             })
             .eq("id", id)
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
             .single();
 
             if(updateError){
@@ -49,8 +47,10 @@ export async function POST(
                 }
             });
             return NextResponse.json({success:true});
-        
+
     } catch (error) {
+        const authErr = authErrorResponse(error);
+        if (authErr) return authErr;
         return NextResponse.json({error:"Internal server error"}, {status:500});
     }
 }

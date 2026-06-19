@@ -1,11 +1,11 @@
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 
 export async function GET(request: NextRequest) {
   try {
-    const { supabase, userId } = await getSupabaseServerClient()
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const { supabase, orgId } = await getActiveOrg()
 
     const searchParams = request.nextUrl.searchParams
     const channelIds = searchParams.getAll("channelIds")
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
         let query = supabase
             .from("scheduled_posts")
             .select("id", { count: "exact", head: true })
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
             .eq("status", status)
         
         if (channelIds.length > 0) query = query.in("user_channel_id", channelIds)
@@ -42,6 +42,8 @@ export async function GET(request: NextRequest) {
       totalFailed: failed.count ?? 0,
     })
   } catch (error: unknown) {
+    const authErr = authErrorResponse(error)
+    if (authErr) return authErr
     console.error("Server error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }

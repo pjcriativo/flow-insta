@@ -1,5 +1,6 @@
 import { POST_STATUS, POST_STATUSES } from "@/constants/post";
-import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getActiveOrg } from "@/lib/supabase-server";
+import { authErrorResponse } from "@/lib/api-auth";
 import { ImageObject } from "@/types/post.type";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,10 +14,7 @@ type PostType = {
 
 export async function GET(request: NextRequest) {
     try {
-        const {supabase, userId} = await getSupabaseServerClient()
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-        }
+        const {supabase, orgId} = await getActiveOrg()
 
         const searchParams = request.nextUrl.searchParams
         const status = searchParams.get("status")
@@ -29,7 +27,7 @@ export async function GET(request: NextRequest) {
             .select(
                 "*, user_channels(*, channel_types(id, type, name, color, character_limit))"
             )
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
             .order("scheduled_at", { ascending: false })
 
         if (status) postQuery = postQuery.eq("status", status)
@@ -70,8 +68,10 @@ export async function GET(request: NextRequest) {
         }));
         
         return NextResponse.json({ groupPosts })
-        
+
     } catch (error) {
+        const authErr = authErrorResponse(error)
+        if (authErr) return authErr
         console.error("Error getting posts:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
@@ -80,10 +80,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const {supabase, userId} = await getSupabaseServerClient()
-        if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-        }
+        const {supabase, orgId, userId} = await getActiveOrg()
 
         const {
             posts,
@@ -118,7 +115,7 @@ export async function POST(request: NextRequest) {
         const {data: userChannels, error: userChannelsError} = await supabase
             .from("user_channels")
             .select("id, channel_type_id")
-            .eq("user_id", userId)
+            .eq("org_id", orgId)
             .eq("is_active", true)
             .eq("is_connected", true)
             .in("channel_type_id", channelTypeIds)
@@ -153,6 +150,7 @@ export async function POST(request: NextRequest) {
             const postStatus = status === POST_STATUS.DRAFT ? POST_STATUS.DRAFT : POST_STATUS.QUEUE;
 
             const payload = normalizedPosts.map((post) => ({
+                org_id: orgId,
                 user_id: userId,
                 user_channel_id: connectedChannels.get(post.channelTypeId),
                 content: post.content,
@@ -176,6 +174,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ posts: data }, { status: 201 })
 
     } catch (error) {
+        const authErr = authErrorResponse(error)
+        if (authErr) return authErr
         console.error("Error creating post:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
