@@ -8,7 +8,7 @@ Plataforma de agendamento de redes sociais com IA. Gerencie múltiplos canais, g
 
 ## 🗝️ Funcionalidades
 
-* 🔐 Autenticação com **Clerk**
+* 🔐 Autenticação com **Supabase Auth** (e-mail e senha)
 * 🔗 Conectar e gerenciar contas de redes sociais
 * 📱 Suporte a múltiplos canais
 * 📝 Criar e gerenciar posts
@@ -23,8 +23,7 @@ Plataforma de agendamento de redes sociais com IA. Gerencie múltiplos canais, g
 
 * **Next.js**, **React**
 * **Inngest** (jobs em background / agendamento)
-* **Clerk** (autenticação)
-* **Supabase** (banco de dados PostgreSQL + storage)
+* **Supabase** (banco PostgreSQL + storage + **Auth** e-mail/senha)
 * **OpenAI** (geração de conteúdo com IA)
 * **Tailwind CSS + Shadcn/UI**
 
@@ -45,8 +44,9 @@ Plataforma de agendamento de redes sociais com IA. Gerencie múltiplos canais, g
    - `fix-channel-types-rls.sql`
    - `storage-bucket.sql`
 
-4. Configure o **Clerk como Third-Party Auth** no Supabase
-   (Supabase → Authentication → Third-party Auth → Clerk) para o RLS funcionar.
+4. No Supabase, habilite **Email/Password** em Authentication → Providers.
+   (Para desenvolvimento, desative a confirmação de e-mail em Authentication →
+   Sign In / Providers para entrar logo após o cadastro.)
 
 5. Rode a aplicação:
 
@@ -68,9 +68,12 @@ Veja `.env.example` para a lista completa. As principais:
 
 - **Supabase** — `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - **OpenAI** — `OPENAI_API_KEY` (e `OPENAI_MODEL`, opcional)
-- **Clerk** — publishable key e secret key
 - **Segredos de criptografia** — `CHANNEL_OAUTH_STATE_SECRET` e `CHANNEL_TOKEN_ENCRYPTION_KEY`
 - **OAuth dos canais** — client id/secret de cada rede social (ex.: Twitter/X)
+
+> **Clerk:** a autenticação por Clerk foi desativada (pouco usada no Brasil). O
+> pacote `@clerk/nextjs` continua instalado e as variáveis `CLERK_*` ficam no
+> `.env.example` para reativação futura. Veja `docs/clerk-reativacao.md`.
 
 ---
 

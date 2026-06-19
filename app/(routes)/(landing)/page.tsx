@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth, UserButton } from "@clerk/nextjs";
+import { useAuthUser } from "@/components/auth-provider";
 import { ArrowRight, Check, ChevronDown } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import Logo from "@/components/logo";
@@ -51,7 +51,7 @@ const featurePanels = [
 ];
 
 export default function LandingPage() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn } = useAuthUser();
 
   return (
   <div className="min-h-screen bg-background text-foreground">
@@ -92,13 +92,6 @@ export default function LandingPage() {
               >
                 <Link href="/schedule">Open workspace</Link>
               </Button>
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "h-9 w-9",
-                  },
-                }}
-              />
             </>
           )}
         </div>

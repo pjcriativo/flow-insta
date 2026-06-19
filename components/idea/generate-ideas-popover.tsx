@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { Sparkles, Check, X } from "lucide-react"
-import { useSubscription } from "@clerk/nextjs/experimental"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -14,7 +13,6 @@ import { cn } from "@/lib/utils"
 import { Spinner } from "../ui/spinner"
 import { Textarea } from "../ui/textarea"
 import { toast } from "sonner"
-import Link from "next/link"
 
 interface GenerateIdeasPopoverProps {
   onGenerated: (title: string, description: string) => void
@@ -32,13 +30,10 @@ export function GenerateIdeasPopover({ onGenerated }: GenerateIdeasPopoverProps)
   }[]>([])
   
   const [selectedIdea, setSelectedIdea] = useState(0)
-   const { data: subscription, isLoading } = useSubscription()
 
-   const canUseAI = !!subscription?.subscriptionItems?.some(item => {
-    const planSlug = item.plan.slug
-    return planSlug === "pro" || planSlug === "business"
-   })
-  
+  // Billing desativado (sem Clerk): IA liberada para todos os usuários logados.
+  const canUseAI = true
+
 
   const generateMutation = useMutation({
     mutationFn: async ({ businessType, targetAudience }: {
@@ -98,19 +93,6 @@ export function GenerateIdeasPopover({ onGenerated }: GenerateIdeasPopoverProps)
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-4 shadow-lg" align="end">
-      {!canUseAI && !isLoading && (
-         <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3
-           text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
-            <p className="text-sm font-medium">AI idea generation requires an upgrade</p>
-            <p className="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80">
-              <Link href="/billing" className="underline underline-offset-4">
-                Upgrade
-              </Link>{" "}
-              to Pro or Premium to generate ideas with AI.
-            </p>
-          </div>
-      )}
-
         {step === 1 && (
           <div className="space-y-4">
             <div>

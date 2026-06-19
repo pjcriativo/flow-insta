@@ -1,7 +1,6 @@
 import { POST_STATUS, POST_STATUSES } from "@/constants/post";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { ImageObject } from "@/types/post.type";
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -81,12 +80,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const {has, userId} = await auth()
+        const {supabase, userId} = await getSupabaseServerClient()
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const {supabase} = await getSupabaseServerClient()
         const {
             posts,
             scheduledAt,
@@ -110,14 +108,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "No valid posts provided" }, { status: 400 })
         }
 
-        const isPaidPlan = has({ plan:"pro"}) || has({ plan:"premium"})
-        if(!isPaidPlan){
-            const canCreatePost = await checkCreatePostLimit(supabase, userId)
-            if (!canCreatePost) {
-                return NextResponse.json({ error: "You have reached your post limit, upgrade" }, { status: 403 })
-            }
-        }
-        
         const invalidPost = normalizedPosts.find((post) => !post.content);
         if (invalidPost) {
             return NextResponse.json({ error: "Post content is required" }, { status: 400 })
@@ -190,23 +180,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
 }
-
-async function checkCreatePostLimit(
-  supabase: Awaited<ReturnType<typeof getSupabaseServerClient>>["supabase"],
-  userId: string,
-) {
-  const { count, error } = await supabase
-    .from("scheduled_posts")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId);
-
-  if (error) {
-    throw error;
-  }
-
-  return (count ?? 0) < 4;
-}
-
 
 function formatDayLabel(date:Date){
     const today = new Date();

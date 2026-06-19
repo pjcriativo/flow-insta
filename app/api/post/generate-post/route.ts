@@ -1,6 +1,5 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
-import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -9,16 +8,11 @@ type ActionType = (typeof ACTIONS)[number];
 
 export async function POST(request:NextRequest){
     try {
-        const { has, userId } = await auth();
+        const { supabase, userId } = await getSupabaseServerClient();
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const canUseAI = has({ plan: "pro" }) || has({ plan: "premium" })
-        if (!canUseAI) {
-            return NextResponse.json({ error: "AI Post generation requires Pro or Premium plan" }, { status: 403 });
-        }
-        
         const {
             action,
             content="",
@@ -35,8 +29,6 @@ export async function POST(request:NextRequest){
 
         let channelType:string | undefined;
         let characterLimit:number | undefined;
-
-        const {supabase} = await getSupabaseServerClient();
 
         if(channelId){
             const {data: channelData, error: channelError} = await supabase

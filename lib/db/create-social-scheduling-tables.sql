@@ -1,12 +1,14 @@
--- REQUESTING_USER_ID FUNCTION (Clerk JWT integration via Supabase third-party auth)
--- Reads the Clerk user id from the `sub` claim of the verified JWT.
--- Requires Clerk configured as a third-party auth provider in Supabase.
+-- REQUESTING_USER_ID FUNCTION (Supabase Auth)
+-- Returns the authenticated user's id (the `sub` claim of the Supabase JWT),
+-- which is the same value as auth.uid(). Stored as text because the user_id
+-- columns are text. Falls back to the raw JWT claim if auth.uid() is null.
 create or replace function public.requesting_user_id()
 returns text
 language sql stable
 as $$
   select nullif(
     coalesce(
+      auth.uid()::text,
       auth.jwt() ->> 'sub',
       current_setting('request.jwt.claims', true)::json ->> 'sub'
     ),
@@ -39,7 +41,7 @@ on conflict (type) do nothing;
 -- One row per connected social account
 create table if not exists user_channels (
   id               uuid primary key default gen_random_uuid(),
-  user_id          text not null,          -- Clerk user ID
+  user_id          text not null,          -- Supabase Auth user id (auth.uid())
   channel_type_id  uuid not null references channel_types(id) on delete restrict,
   provider_account_id text,
   handle           text,
@@ -80,7 +82,7 @@ on conflict (name) do nothing;
 -- IDEAS
 create table if not exists ideas (
   id          uuid primary key default gen_random_uuid(),
-  user_id     text not null,             -- Clerk user ID
+  user_id     text not null,             -- Supabase Auth user id (auth.uid())
   group_id    uuid not null references idea_groups(id) on delete restrict,
   title       text not null,
   description text,
@@ -100,7 +102,7 @@ create policy ideas_policy on ideas
 -- SCHEDULED POSTS
 create table if not exists scheduled_posts (
   id              uuid primary key default gen_random_uuid(),
-  user_id         text not null,         -- Clerk user ID
+  user_id         text not null,         -- Supabase Auth user id (auth.uid())
   user_channel_id uuid not null references user_channels(id) on delete cascade,
   content         text not null,
   images          jsonb default '[]',

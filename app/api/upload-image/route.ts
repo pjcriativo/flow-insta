@@ -1,5 +1,4 @@
-import { getSupabaseUploadClient } from "@/lib/supabase-server";
-import { auth } from "@clerk/nextjs/server";
+import { getSupabaseServerClient, getSupabaseUploadClient } from "@/lib/supabase-server";
 import { NextResponse } from "next/server";
 
 // Supabase Storage bucket used for post/idea images. Create it (public) in
@@ -12,7 +11,7 @@ function sanitizeFileName(name: string) {
 
 export async function POST(request: Request) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getSupabaseServerClient();
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }

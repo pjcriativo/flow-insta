@@ -13,10 +13,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getChannelIcon, getChannelUrl } from '@/constants/channels';
 import { ChannelType } from '@/types/channel.type';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
-import { UserButton, useUser } from '@clerk/nextjs';
+import { useAuthUser } from '@/components/auth-provider';
 import ChannelAvatar from '@/components/channel-avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import CreatePostDialog from '@/components/schedule/create-post-dialog';
 
 const mainNav = [
@@ -30,8 +33,15 @@ const AppSidebar = () => {
   const pathname = usePathname();
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
-  const { user } = useUser()
+  const { user, signOut } = useAuthUser()
+  const router = useRouter()
   const [isCreatePostOpen, setIsCreatePostOpen] = useState<boolean>(false)
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push("/sign-in")
+    router.refresh()
+  }
 
    const connectMutation = useMutation({
     mutationFn: async (channelTypeId: string) => {
@@ -232,15 +242,23 @@ const AppSidebar = () => {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <UserButton
-            showName={false}
-            appearance={{
-              elements: {
-                avatarBox: "h-8 w-8",
-              },
-            }}
-          />
-          <span className="text-sm">{user?.fullName || user?.primaryEmailAddress?.emailAddress}</span>
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs uppercase">
+              {user?.email?.[0] ?? "?"}
+            </AvatarFallback>
+          </Avatar>
+          {!isCollapsed && (
+            <>
+              <span className="text-sm truncate flex-1">{user?.email}</span>
+              <button
+                onClick={handleSignOut}
+                title="Sair"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>

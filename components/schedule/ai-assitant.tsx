@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "../ui/spinner"
-import { useSubscription } from "@clerk/nextjs/experimental"
-import Link from "next/link"
 
 const QUICK_ACTIONS = [
   { icon: Repeat, label: "Rephrase" },
@@ -26,12 +24,8 @@ interface AIAssistantProps {
 
 export function AIAssistant({ className, content, channelId, onGenerate }: AIAssistantProps) {
   const [prompt, setPrompt] = React.useState("")
-    const { data: subscription, isLoading } = useSubscription()
-  const canUseAI =
-    !!subscription?.subscriptionItems?.some((item) => {
-      const planSlug = item.plan.slug
-      return planSlug === "pro" || planSlug === "premium"
-    })
+  // Billing desativado (sem Clerk): IA liberada para todos os usuários logados.
+  const canUseAI = true
 
   const generateMutation = useMutation({
     mutationFn: async ({ action, promptText }: { action: string; promptText?: string }) => {
@@ -85,19 +79,6 @@ export function AIAssistant({ className, content, channelId, onGenerate }: AIAss
       )}
     >
 
-      {!canUseAI && !isLoading && (
-         <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3
-           text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
-            <p className="text-sm font-medium">AI idea generation requires an upgrade</p>
-            <p className="mt-1 text-sm text-amber-800/80 dark:text-amber-200/80">
-              <Link href="/billing" className="underline underline-offset-4">
-                Upgrade
-              </Link>{" "}
-              to Pro or Premium to generate ideas with AI.
-            </p>
-          </div>
-      )}
-      
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2 ">
           <Wand2Icon className="h-4 w-4 text-purple-500" />

@@ -1,5 +1,5 @@
 import { AI_MODEL, getOpenAI } from "@/lib/ai";
-import { auth } from "@clerk/nextjs/server";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -7,14 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
     try {
-        const { has, userId } = await auth();
+        const { userId } = await getSupabaseServerClient();
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const canUseAI = has({ plan: "pro" }) || has({ plan: "premium" })
-        if (!canUseAI) {
-            return NextResponse.json({ error: "AI Idea generation requires Pro or Premium plan" }, { status: 403 });
         }
 
         const { businessType, targetAudience } = await request.json()

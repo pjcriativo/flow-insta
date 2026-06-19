@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ClerkProvider } from "@clerk/nextjs";
+import { AuthProvider } from "@/components/auth-provider";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,7 +42,7 @@ export default function RootLayout({
       // }
     >
       <body className="min-h-full flex flex-col">
-        <ClerkProvider>
+        <AuthProvider>
           <QueryProvider>
             <ThemeProvider
               attribute="class"
@@ -59,7 +59,7 @@ export default function RootLayout({
 
           </QueryProvider>
 
-        </ClerkProvider>
+        </AuthProvider>
       </body>
     </html>
   );

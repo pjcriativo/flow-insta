@@ -1,17 +1,25 @@
 "use client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Image from "next/image"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserProfile, useUser } from "@clerk/nextjs"
+import { useAuthUser } from "@/components/auth-provider"
 import { Layers, Palette, User } from "lucide-react"
 import ChannelsTab from "@/components/settings/channels-tab"
 import { useTheme } from "next-themes"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
 const SettingsPage = () => {
-  const { user } = useUser()
+  const { user, signOut } = useAuthUser()
   const { theme, setTheme } = useTheme()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push("/sign-in")
+    router.refresh()
+  }
   return (
     <div className="w-full">
       <div className="max-w-5xl mx-auto w-full h-full">
@@ -47,34 +55,21 @@ const SettingsPage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-4">
-                    {user?.imageUrl ? (
-                      <Image
-                        src={user.imageUrl}
-                        alt="Profile"
-                        className="h-16 w-16 rounded-full"
-                        width={64}
-                        height={64}
-                      />
-                    ):(
-                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                        <User className="size-8 text-muted-foreground" />
-                      </div>
-                    )}
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                      <span className="text-xl font-semibold uppercase text-muted-foreground">
+                        {user?.email?.[0] ?? <User className="size-8" />}
+                      </span>
+                    </div>
 
                     <div>
-                      <p className="font-medium">{user?.fullName || "No name set"}</p>
-                      <p className="text-sm text-muted-foreground">{user?.primaryEmailAddress?.emailAddress}</p>
+                      <p className="font-medium">{user?.email || "Sem e-mail"}</p>
+                      <p className="text-sm text-muted-foreground">Conta Flow Insta</p>
                     </div>
                   </div>
-                   <div className="mt-6">
-                    <UserProfile
-                      appearance={{
-                        elements: {
-                          rootBox: "w-full",
-                          card: "border-0 shadow-none",
-                        },
-                      }}
-                    />
+                  <div className="mt-6">
+                    <Button variant="outline" onClick={handleSignOut}>
+                      Sair da conta
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

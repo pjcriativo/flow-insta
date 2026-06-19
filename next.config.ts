@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "img.clerk.com",
+        hostname: "*.supabase.co",
       },
-    ],    
+    ],
   },
   allowedDevOrigins:[
     "yolande-sistroid-jenee.ngrok-free.dev"
