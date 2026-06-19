@@ -1,5 +1,6 @@
 import { requirePlatformAdmin, getSupabaseAdminClient } from "@/lib/supabase-server";
 import { authErrorResponse } from "@/lib/api-auth";
+import { logAudit } from "@/lib/audit";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/admin/users/[id] — detalhe de um usuário (perfil + orgs + admin?).
@@ -51,8 +52,8 @@ export async function GET(
   }
 }
 
-// PATCH /api/admin/users/[id] — promover/rebaixar super-admin.
-// Body: { isPlatformAdmin: boolean }
+// PATCH /api/admin/users/[id] — promover/rebaixar super-admin OU suspender/reativar.
+// Body: { isPlatformAdmin?: boolean, banned?: boolean }
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -60,23 +61,46 @@ export async function PATCH(
   try {
     const { userId: actorId } = await requirePlatformAdmin();
     const { id } = await params;
-    const { isPlatformAdmin } = await request.json();
+    const { isPlatformAdmin, banned } = await request.json();
     const admin = getSupabaseAdminClient();
 
-    if (isPlatformAdmin) {
-      await admin.from("platform_admins").upsert({ user_id: id }, { onConflict: "user_id" });
-    } else {
-      // Não permitir que o admin remova a si mesmo (evita lockout acidental).
+    // Suspender / reativar usuário (ban nativo do Supabase Auth).
+    if (typeof banned === "boolean") {
       if (id === actorId) {
         return NextResponse.json(
-          { error: "Você não pode remover seu próprio acesso de admin" },
+          { error: "Você não pode suspender a si mesmo" },
           { status: 409 }
         );
       }
-      await admin.from("platform_admins").delete().eq("user_id", id);
+      // ban_duration aceita "none" para reativar, ou uma duração (ex.: "876000h" ~ 100 anos).
+      await admin.auth.admin.updateUserById(id, {
+        ban_duration: banned ? "876000h" : "none",
+      });
+      await logAudit({
+        actorId, action: banned ? "user.suspend" : "user.reactivate",
+        targetType: "user", targetId: id,
+      });
+      return NextResponse.json({ success: true });
     }
 
-    return NextResponse.json({ success: true });
+    if (typeof isPlatformAdmin === "boolean") {
+      if (isPlatformAdmin) {
+        await admin.from("platform_admins").upsert({ user_id: id }, { onConflict: "user_id" });
+        await logAudit({ actorId, action: "user.promote", targetType: "user", targetId: id });
+      } else {
+        if (id === actorId) {
+          return NextResponse.json(
+            { error: "Você não pode remover seu próprio acesso de admin" },
+            { status: 409 }
+          );
+        }
+        await admin.from("platform_admins").delete().eq("user_id", id);
+        await logAudit({ actorId, action: "user.demote", targetType: "user", targetId: id });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: "Nada para atualizar" }, { status: 400 });
   } catch (error) {
     const authErr = authErrorResponse(error);
     if (authErr) return authErr;
@@ -116,6 +140,7 @@ export async function DELETE(
     }
 
     await admin.from("platform_admins").delete().eq("user_id", id);
+    await logAudit({ actorId, action: "user.delete", targetType: "user", targetId: id });
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) {
       return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });

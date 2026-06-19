@@ -17,6 +17,9 @@ import {
   Send,
   Clock,
   Link2,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
 } from "lucide-react";
 import {
   Area,
@@ -64,14 +67,29 @@ const CARDS: { key: keyof Metrics; label: string; icon: React.ElementType }[] = 
 
 const PIE_COLORS = ["#84cc16", "#3b82f6"];
 
+type MetricsResponse = {
+  metrics: Metrics;
+  trends: {
+    orgs: { value: number; changePct: number };
+    posts: { value: number; changePct: number };
+  };
+  health: {
+    freeOrgs: number; proOrgs: number; businessOrgs: number;
+    paidOrgs: number; activationRate: number; mrrCents: number;
+  };
+};
+
 export default function AdminOverviewPage() {
-  const { data: metrics, isLoading: loadingMetrics } = useQuery({
+  const { data: full, isLoading: loadingMetrics } = useQuery({
     queryKey: ["admin-metrics"],
-    queryFn: async (): Promise<Metrics> => {
+    queryFn: async (): Promise<MetricsResponse> => {
       const res = await fetch("/api/admin/metrics");
-      return (await res.json()).metrics;
+      return await res.json();
     },
   });
+  const metrics = full?.metrics;
+  const trends = full?.trends;
+  const health = full?.health;
 
   const { data: analytics, isLoading: loadingAnalytics } = useQuery({
     queryKey: ["admin-analytics"],
@@ -88,6 +106,35 @@ export default function AdminOverviewPage() {
         <p className="text-sm text-muted-foreground">
           Métricas e atividade da plataforma.
         </p>
+      </div>
+
+      {/* Saúde do negócio */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <HealthCard
+          label="MRR estimado"
+          value={health ? `R$ ${(health.mrrCents / 100).toFixed(0)}` : "—"}
+          hint="receita recorrente mensal"
+          loading={loadingMetrics}
+          highlight
+        />
+        <HealthCard
+          label="Orgs pagas"
+          value={health?.paidOrgs ?? "—"}
+          hint={`${health?.proOrgs ?? 0} Pro · ${health?.businessOrgs ?? 0} Business`}
+          loading={loadingMetrics}
+        />
+        <TrendCard
+          label="Novas orgs (30d)"
+          value={trends?.orgs.value ?? 0}
+          changePct={trends?.orgs.changePct ?? 0}
+          loading={loadingMetrics}
+        />
+        <TrendCard
+          label="Novos posts (30d)"
+          value={trends?.posts.value ?? 0}
+          changePct={trends?.posts.changePct ?? 0}
+          loading={loadingMetrics}
+        />
       </div>
 
       {/* Cards de métricas */}
@@ -234,5 +281,60 @@ export default function AdminOverviewPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function HealthCard({
+  label, value, hint, loading, highlight,
+}: {
+  label: string; value: string | number; hint?: string; loading: boolean; highlight?: boolean;
+}) {
+  return (
+    <Card className={highlight ? "border-primary/40 bg-primary/5" : undefined}>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        {highlight && <DollarSign className="size-4 text-primary" />}
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <Skeleton className="h-9 w-20" />
+        ) : (
+          <>
+            <div className="text-3xl font-semibold">{value}</div>
+            {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TrendCard({
+  label, value, changePct, loading,
+}: { label: string; value: number; changePct: number; loading: boolean }) {
+  const up = changePct >= 0;
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
+        {up ? (
+          <TrendingUp className="size-4 text-green-500" />
+        ) : (
+          <TrendingDown className="size-4 text-red-500" />
+        )}
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <Skeleton className="h-9 w-16" />
+        ) : (
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-semibold">{value}</span>
+            <span className={`text-sm font-medium ${up ? "text-green-500" : "text-red-500"}`}>
+              {up ? "+" : ""}{changePct}%
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

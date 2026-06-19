@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
       lastSignInAt: u.last_sign_in_at ?? null,
       confirmed: !!u.email_confirmed_at,
       isPlatformAdmin: adminSet.has(u.id),
+      banned: !!(u as unknown as { banned_until?: string }).banned_until &&
+        new Date((u as unknown as { banned_until: string }).banned_until) > new Date(),
     }));
 
     return NextResponse.json({ users, page });

@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MoreHorizontal, Search, ShieldCheck, ShieldOff, Trash2, Download } from "lucide-react";
+import { MoreHorizontal, Search, ShieldCheck, ShieldOff, Trash2, Download, Ban, CircleCheck } from "lucide-react";
 import { toast } from "sonner";
 
 type AdminUser = {
@@ -32,6 +32,7 @@ type AdminUser = {
   lastSignInAt: string | null;
   confirmed: boolean;
   isPlatformAdmin: boolean;
+  banned: boolean;
 };
 
 export default function AdminUsersPage() {
@@ -65,6 +66,22 @@ export default function AdminUsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       toast.success("Permissão atualizada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggleBan = useMutation({
+    mutationFn: async ({ id, banned }: { id: string; banned: boolean }) => {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ banned }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Falha");
+    },
+    onSuccess: (_d, { banned }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      toast.success(banned ? "Usuário suspenso" : "Usuário reativado");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -144,6 +161,11 @@ export default function AdminUsersPage() {
                         <ShieldCheck className="size-3" /> Admin
                       </Badge>
                     )}
+                    {u.banned && (
+                      <Badge variant="destructive" className="gap-1">
+                        <Ban className="size-3" /> Suspenso
+                      </Badge>
+                    )}
                     {!u.confirmed && <Badge variant="outline">não confirmado</Badge>}
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -171,6 +193,15 @@ export default function AdminUsersPage() {
                         onClick={() => toggleAdmin.mutate({ id: u.id, makeAdmin: true })}
                       >
                         <ShieldCheck className="size-4" /> Tornar admin
+                      </DropdownMenuItem>
+                    )}
+                    {u.banned ? (
+                      <DropdownMenuItem onClick={() => toggleBan.mutate({ id: u.id, banned: false })}>
+                        <CircleCheck className="size-4" /> Reativar usuário
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem onClick={() => toggleBan.mutate({ id: u.id, banned: true })}>
+                        <Ban className="size-4" /> Suspender usuário
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem
