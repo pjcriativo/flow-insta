@@ -9,6 +9,8 @@ Plataforma de agendamento de redes sociais com IA. Gerencie múltiplos canais, g
 ## 🗝️ Funcionalidades
 
 * 🔐 Autenticação com **Supabase Auth** (e-mail e senha)
+* 🏢 **Multi-tenancy** por organização — B2C (conta pessoal) e B2B (equipes com papéis e convites)
+* 👮 **Área de admin** da plataforma (`/admin`) para super-admins
 * 🔗 Conectar e gerenciar contas de redes sociais
 * 📱 Suporte a múltiplos canais
 * 📝 Criar e gerenciar posts
@@ -39,10 +41,11 @@ Plataforma de agendamento de redes sociais com IA. Gerencie múltiplos canais, g
 
 2. Copie `.env.example` para `.env` e preencha as variáveis (veja abaixo).
 
-3. Crie um projeto no **Supabase** e rode os scripts SQL em [`lib/db/`](lib/db/) no SQL Editor:
+3. Crie um projeto no **Supabase** e rode os scripts SQL em [`lib/db/`](lib/db/) no SQL Editor, **nesta ordem**:
    - `create-social-scheduling-tables.sql`
    - `fix-channel-types-rls.sql`
    - `storage-bucket.sql`
+   - `create-org-multitenancy.sql` (organizações, RLS por org, trigger de signup)
 
 4. No Supabase, habilite **Email/Password** em Authentication → Providers.
    (Para desenvolvimento, desative a confirmação de e-mail em Authentication →
@@ -59,6 +62,26 @@ Plataforma de agendamento de redes sociais com IA. Gerencie múltiplos canais, g
    ```bash
    npx inngest-cli@latest dev
    ```
+
+---
+
+## 🏢 Organizações e multi-tenancy
+
+- Todo usuário ganha uma **organização pessoal** automaticamente no cadastro (B2C, invisível).
+- Para **equipes (B2B)**: use o seletor de organização na barra lateral → "Criar organização".
+  Em Settings → Team é possível **convidar membros** (gera um link `/invite/<token>`),
+  gerenciar papéis (owner/admin/member) e remover membros.
+- Os dados (canais, posts, ideias) são isolados por organização via **RLS** no banco.
+
+## 👮 Área de admin
+
+A área `/admin` (métricas, usuários, organizações) é restrita a **super-admins**.
+Para tornar um usuário super-admin, insira o `user_id` dele na tabela `platform_admins`
+(via Supabase SQL Editor) — não há auto-promoção pela interface:
+
+```sql
+insert into public.platform_admins (user_id) values ('<auth-user-id>');
+```
 
 ---
 
