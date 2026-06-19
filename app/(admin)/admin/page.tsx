@@ -21,6 +21,8 @@ import {
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -179,6 +181,28 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Posts por dia */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Novos posts por dia (30 dias)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingAnalytics ? (
+            <Skeleton className="h-[220px] w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={analytics?.growth ?? []}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} interval={4} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} width={28} />
+                <Tooltip />
+                <Bar dataKey="newPosts" name="Posts" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Atividade recente */}
       <Card>

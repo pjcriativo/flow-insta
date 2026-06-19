@@ -59,3 +59,25 @@ export async function GET(
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/orgs/[id] — exclui uma organização (cascade nos dados).
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await requirePlatformAdmin();
+    const { id } = await params;
+    const admin = getSupabaseAdminClient();
+
+    const { error } = await admin.from("organizations").delete().eq("id", id);
+    if (error) {
+      return NextResponse.json({ error: "Failed to delete organization" }, { status: 500 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const authErr = authErrorResponse(error);
+    if (authErr) return authErr;
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

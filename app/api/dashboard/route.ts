@@ -9,7 +9,7 @@ export async function GET() {
     const { supabase, orgId } = await getActiveOrg();
     const nowIso = new Date().toISOString();
 
-    const [counts, upcoming, recentPublished, channels, postsForStreak] =
+    const [counts, upcoming, recentPublished, channels, postsForStreak, ideasCount, postsTotal] =
       await Promise.all([
         // Contagens por status (head + count).
         Promise.all(
@@ -53,6 +53,10 @@ export async function GET() {
           .eq("status", "published")
           .gte("published_at", new Date(Date.now() - 60 * 86400000).toISOString())
           .order("published_at", { ascending: false }),
+        // Total de ideias (onboarding).
+        supabase.from("ideas").select("id", { count: "exact", head: true }).eq("org_id", orgId),
+        // Total de posts (onboarding).
+        supabase.from("scheduled_posts").select("id", { count: "exact", head: true }).eq("org_id", orgId),
       ]);
 
     const countMap = Object.fromEntries(counts);
@@ -99,6 +103,11 @@ export async function GET() {
       connectedChannels: channels.data?.length ?? 0,
       streak,
       series,
+      onboarding: {
+        hasChannel: (channels.data?.length ?? 0) > 0,
+        hasIdea: (ideasCount.count ?? 0) > 0,
+        hasPost: (postsTotal.count ?? 0) > 0,
+      },
     });
   } catch (error) {
     const authErr = authErrorResponse(error);

@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import IdeaDialog from "./idea-dialog"
 import { IdeaType } from "@/types/idea.type"
 import { GenerateIdeasPopover } from "./generate-ideas-popover"
+import { ContentPlanDialog } from "./content-plan-dialog"
 import { useActiveOrg } from "@/components/active-org-provider"
 
 type Column = {
@@ -252,6 +253,7 @@ const IdeaKanban = () => {
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <ContentPlanDialog />
                         {/* //GenerateIdea popover */}
                         <GenerateIdeasPopover onGenerated={handleGeneratedIdea} />
                         <Button variant="outline" className="gap-2"

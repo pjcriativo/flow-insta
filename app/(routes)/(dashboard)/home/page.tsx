@@ -20,6 +20,9 @@ import {
   Link2,
   CalendarClock,
   ArrowRight,
+  CheckCircle2,
+  Circle,
+  Rocket,
 } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import CreatePostDialog from "@/components/schedule/create-post-dialog";
@@ -42,6 +45,7 @@ type Dashboard = {
   connectedChannels: number;
   streak: number;
   series: { date: string; published: number }[];
+  onboarding: { hasChannel: boolean; hasIdea: boolean; hasPost: boolean };
 };
 
 export default function HomePage() {
@@ -83,6 +87,22 @@ export default function HomePage() {
           </Button>
         </div>
       </div>
+
+      {/* Onboarding — só enquanto há passos incompletos */}
+      {!isLoading && data?.onboarding && !(data.onboarding.hasChannel && data.onboarding.hasIdea && data.onboarding.hasPost) && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Rocket className="size-4 text-primary" /> Primeiros passos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <OnboardStep done={data.onboarding.hasChannel} label="Conecte uma rede social" href="/settings" cta="Conectar" />
+            <OnboardStep done={data.onboarding.hasIdea} label="Crie sua primeira ideia de conteúdo" href="/ideas" cta="Criar ideia" />
+            <OnboardStep done={data.onboarding.hasPost} label="Agende seu primeiro post" onClick={() => setCreateOpen(true)} cta="Agendar" />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Cards de status */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -281,6 +301,35 @@ function EmptyHint({ text, cta, onClick }: { text: string; cta?: string; onClick
           {cta}
         </Button>
       )}
+    </div>
+  );
+}
+
+function OnboardStep({
+  done, label, href, onClick, cta,
+}: {
+  done: boolean; label: string; href?: string; onClick?: () => void; cta: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border bg-background p-3">
+      {done ? (
+        <CheckCircle2 className="size-5 text-green-500" />
+      ) : (
+        <Circle className="size-5 text-muted-foreground" />
+      )}
+      <span className={`flex-1 text-sm ${done ? "text-muted-foreground line-through" : ""}`}>
+        {label}
+      </span>
+      {!done &&
+        (href ? (
+          <Button size="sm" variant="outline" asChild>
+            <Link href={href}>{cta}</Link>
+          </Button>
+        ) : (
+          <Button size="sm" variant="outline" onClick={onClick}>
+            {cta}
+          </Button>
+        ))}
     </div>
   );
 }

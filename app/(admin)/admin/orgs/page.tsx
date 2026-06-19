@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Building2, Search, Users, FileText, Link2, Lightbulb } from "lucide-react";
+import { Building2, Search, Users, FileText, Link2, Lightbulb, Download, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type AdminOrg = {
   id: string;
@@ -32,6 +33,7 @@ type OrgDetail = {
 };
 
 export default function AdminOrgsPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -41,6 +43,19 @@ export default function AdminOrgsPage() {
       const res = await fetch("/api/admin/orgs");
       return (await res.json()).organizations ?? [];
     },
+  });
+
+  const deleteOrg = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/orgs/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Falha ao excluir");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orgs"] });
+      setSelected(null);
+      toast.success("Organização excluída");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: detail, isLoading: loadingDetail } = useQuery({
@@ -60,11 +75,18 @@ export default function AdminOrgsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Organizações</h1>
-        <p className="text-sm text-muted-foreground">
-          Todas as organizações da plataforma.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Organizações</h1>
+          <p className="text-sm text-muted-foreground">
+            Todas as organizações da plataforma.
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <a href="/api/admin/export?type=orgs">
+            <Download className="size-4" /> Exportar CSV
+          </a>
+        </Button>
       </div>
 
       <div className="relative max-w-sm">
@@ -159,6 +181,26 @@ export default function AdminOrgsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                    disabled={deleteOrg.isPending}
+                    onClick={() => {
+                      if (
+                        confirm(
+                          `Excluir a organização "${detail.org.name}"? Todos os dados dela serão removidos. Esta ação é permanente.`
+                        )
+                      ) {
+                        deleteOrg.mutate(detail.org.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="size-4" /> Excluir organização
+                  </Button>
                 </div>
               </>
             ) : null}

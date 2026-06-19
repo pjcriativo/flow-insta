@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MoreHorizontal, Search, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
+import { MoreHorizontal, Search, ShieldCheck, ShieldOff, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 
 type AdminUser = {
@@ -84,11 +84,18 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Usuários</h1>
-        <p className="text-sm text-muted-foreground">
-          Gerencie os usuários da plataforma.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Usuários</h1>
+          <p className="text-sm text-muted-foreground">
+            Gerencie os usuários da plataforma.
+          </p>
+        </div>
+        <Button variant="outline" asChild>
+          <a href="/api/admin/export?type=users">
+            <Download className="size-4" /> Exportar CSV
+          </a>
+        </Button>
       </div>
 
       <div className="relative max-w-sm">
