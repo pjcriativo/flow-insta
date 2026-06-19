@@ -16,12 +16,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to list users" }, { status: 500 });
     }
 
+    // Conjunto de super-admins para marcar o badge.
+    const { data: adminRows } = await admin.from("platform_admins").select("user_id");
+    const adminSet = new Set((adminRows ?? []).map((r) => r.user_id));
+
     const users = data.users.map((u) => ({
       id: u.id,
       email: u.email,
       createdAt: u.created_at,
       lastSignInAt: u.last_sign_in_at ?? null,
       confirmed: !!u.email_confirmed_at,
+      isPlatformAdmin: adminSet.has(u.id),
     }));
 
     return NextResponse.json({ users, page });

@@ -1,8 +1,29 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MoreHorizontal, Search, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type AdminUser = {
   id: string;
@@ -10,46 +31,178 @@ type AdminUser = {
   createdAt: string;
   lastSignInAt: string | null;
   confirmed: boolean;
+  isPlatformAdmin: boolean;
 };
 
 export default function AdminUsersPage() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [toDelete, setToDelete] = useState<AdminUser | null>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ["admin-users"],
     queryFn: async (): Promise<AdminUser[]> => {
       const res = await fetch("/api/admin/users");
-      const json = await res.json();
-      return json.users ?? [];
+      return (await res.json()).users ?? [];
     },
   });
 
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return data ?? [];
+    return (data ?? []).filter((u) => u.email?.toLowerCase().includes(q));
+  }, [data, search]);
+
+  const toggleAdmin = useMutation({
+    mutationFn: async ({ id, makeAdmin }: { id: string; makeAdmin: boolean }) => {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPlatformAdmin: makeAdmin }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Falha");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      toast.success("Permissão atualizada");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteUser = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json()).error || "Falha");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      setToDelete(null);
+      toast.success("Usuário excluído");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold">Usuários</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">Usuários</h1>
+        <p className="text-sm text-muted-foreground">
+          Gerencie os usuários da plataforma.
+        </p>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por e-mail…"
+          className="pl-9"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-sm text-muted-foreground">
-            {isLoading ? "Carregando…" : `${data?.length ?? 0} usuário(s)`}
+            {isLoading ? "Carregando…" : `${filtered.length} usuário(s)`}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {(data ?? []).map((u) => (
-            <div
-              key={u.id}
-              className="flex items-center gap-3 rounded-lg border p-3 text-sm"
-            >
-              <span className="flex-1 truncate">{u.email}</span>
-              {u.confirmed ? (
-                <Badge variant="secondary">confirmado</Badge>
-              ) : (
-                <Badge variant="outline">pendente</Badge>
-              )}
-              <span className="text-muted-foreground">
-                {new Date(u.createdAt).toLocaleDateString()}
-              </span>
-            </div>
-          ))}
+          {isLoading ? (
+            <>
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+            </>
+          ) : filtered.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nenhum usuário encontrado.
+            </p>
+          ) : (
+            filtered.map((u) => (
+              <div
+                key={u.id}
+                className="flex items-center gap-3 rounded-lg border p-3 text-sm"
+              >
+                <Avatar className="size-9">
+                  <AvatarFallback className="text-xs uppercase">
+                    {u.email?.[0] ?? "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium">{u.email}</span>
+                    {u.isPlatformAdmin && (
+                      <Badge className="gap-1">
+                        <ShieldCheck className="size-3" /> Admin
+                      </Badge>
+                    )}
+                    {!u.confirmed && <Badge variant="outline">não confirmado</Badge>}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Criado {new Date(u.createdAt).toLocaleDateString()}
+                    {u.lastSignInAt &&
+                      ` · último acesso ${new Date(u.lastSignInAt).toLocaleDateString()}`}
+                  </div>
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {u.isPlatformAdmin ? (
+                      <DropdownMenuItem
+                        onClick={() => toggleAdmin.mutate({ id: u.id, makeAdmin: false })}
+                      >
+                        <ShieldOff className="size-4" /> Remover admin
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={() => toggleAdmin.mutate({ id: u.id, makeAdmin: true })}
+                      >
+                        <ShieldCheck className="size-4" /> Tornar admin
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setToDelete(u)}
+                    >
+                      <Trash2 className="size-4" /> Excluir usuário
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ))
+          )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir usuário</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir <strong>{toDelete?.email}</strong>? Esta
+              ação é permanente e remove a conta e os dados pessoais do usuário.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setToDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteUser.isPending}
+              onClick={() => toDelete && deleteUser.mutate(toDelete.id)}
+            >
+              {deleteUser.isPending ? "Excluindo…" : "Excluir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
