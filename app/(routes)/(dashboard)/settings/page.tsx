@@ -2,8 +2,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuthUser } from "@/components/auth-provider"
-import { Layers, Palette, User } from "lucide-react"
+import { useActiveOrg } from "@/components/active-org-provider"
+import { Layers, Palette, User, Users } from "lucide-react"
 import ChannelsTab from "@/components/settings/channels-tab"
+import TeamTab from "@/components/settings/team-tab"
 import { useTheme } from "next-themes"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -12,8 +14,10 @@ import { useRouter } from "next/navigation"
 
 const SettingsPage = () => {
   const { user, signOut } = useAuthUser()
+  const { activeOrg } = useActiveOrg()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
+  const showTeam = activeOrg?.type === "team"
 
   const handleSignOut = async () => {
     await signOut()
@@ -39,6 +43,11 @@ const SettingsPage = () => {
                 <TabsTrigger value="channels">
                   <Layers className="size-4" />
                   Channels</TabsTrigger>
+                {showTeam && (
+                  <TabsTrigger value="team">
+                    <Users className="size-4" />
+                    Team</TabsTrigger>
+                )}
                 <TabsTrigger value="appearance">
                   <Palette className="size-4" />
                   Appearance</TabsTrigger>
@@ -78,6 +87,12 @@ const SettingsPage = () => {
             <TabsContent value="channels">
               <ChannelsTab  />
             </TabsContent>
+
+            {showTeam && (
+              <TabsContent value="team">
+                <TeamTab />
+              </TabsContent>
+            )}
 
             <TabsContent value="appearance">
               <Card>
