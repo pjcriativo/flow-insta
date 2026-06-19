@@ -90,7 +90,7 @@ export default function LandingPage() {
                 asChild
                 className="rounded-full bg-primary px-5 text-primary-foreground hover:bg-primary/90"
               >
-                <Link href="/schedule">Open workspace</Link>
+                <Link href="/home">Open workspace</Link>
               </Button>
             </>
           )}
@@ -167,7 +167,7 @@ export default function LandingPage() {
                   asChild
                   className="h-12 rounded-full bg-primary px-6 text-base text-primary-foreground hover:bg-primary/90"
                 >
-                  <Link href="/schedule">
+                  <Link href="/home">
                     Open workspace
                     <ArrowRight className="h-4 w-4" />
                   </Link>

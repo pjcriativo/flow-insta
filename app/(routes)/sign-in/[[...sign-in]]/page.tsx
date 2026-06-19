@@ -20,7 +20,7 @@ import { toast } from "sonner";
 const SignInPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/schedule";
+  const redirectTo = searchParams.get("redirect") || "/home";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

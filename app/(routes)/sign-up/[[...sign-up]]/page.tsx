@@ -42,7 +42,7 @@ const SignUpPage = () => {
 
     // Se a confirmação de e-mail estiver desativada, já vem com sessão.
     if (data.session) {
-      router.push("/schedule");
+      router.push("/home");
       router.refresh();
     } else {
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");

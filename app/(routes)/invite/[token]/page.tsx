@@ -45,7 +45,7 @@ export default function InvitePage({
       return;
     }
     toast.success("Você entrou na organização!");
-    router.push("/schedule");
+    router.push("/home");
     router.refresh();
   };
 
