@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:token": "tsx scripts/verify-approval-token.ts"
+    "test:token": "tsx scripts/verify-approval-token.ts",
+    "test:atomization": "tsx scripts/verify-atomization-schemas.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
