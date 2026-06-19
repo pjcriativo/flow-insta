@@ -30,11 +30,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — NUNCA commitar segredos. Apenas .env.example é versionado.
 .env
+.env.*
+!.env.example
 
 # vercel
 .vercel
+
+# supabase CLI (arquivos locais com refs/conexão — não versionar)
+supabase/.temp
+supabase/.branches
+.supabase
 
 # typescript
 *.tsbuildinfo
