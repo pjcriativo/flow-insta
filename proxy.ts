@@ -2,7 +2,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 // Rotas públicas (acessíveis sem login).
-const PUBLIC_PATHS = ["/", "/sign-in", "/sign-up", "/api/inngest", "/auth", "/invite"];
+const PUBLIC_PATHS = [
+  "/",
+  "/sign-in",
+  "/sign-up",
+  "/api/inngest",
+  "/auth",
+  "/invite",
+  "/aprovar", // página pública de aprovação (magic link)
+  "/api/approvals/public", // APIs públicas decide/comment
+];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some(
