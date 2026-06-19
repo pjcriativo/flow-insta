@@ -93,6 +93,17 @@ as $$
   );
 $$;
 
+-- Total de usuários (auth.users). SECURITY DEFINER para enxergar auth.users.
+-- A autorização é feita na rota (/api/admin/metrics via requirePlatformAdmin),
+-- e o grant é revogado de anon/authenticated — só o service_role a executa.
+create or replace function public.admin_user_count()
+returns integer
+language sql stable security definer set search_path = public
+as $$
+  select count(*)::int from auth.users;
+$$;
+revoke all on function public.admin_user_count() from public, anon, authenticated;
+
 -- ---------------------------------------------------------
 -- 3. ORG_ID NAS TABELAS DE DADOS
 -- ---------------------------------------------------------

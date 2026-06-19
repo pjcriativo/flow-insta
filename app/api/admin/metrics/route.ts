@@ -18,8 +18,8 @@ export async function GET() {
       return count ?? 0;
     };
 
-    const { data: usersPage } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
-    const totalUsers = (usersPage as unknown as { total?: number })?.total ?? undefined;
+    const { data: userCount } = await admin.rpc("admin_user_count");
+    const totalUsers = typeof userCount === "number" ? userCount : null;
 
     const [
       totalOrgs,

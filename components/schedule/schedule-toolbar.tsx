@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { ChannelType } from "@/types/channel.type";
 import ChannelAvatar from "../channel-avatar";
+import { useActiveOrg } from "@/components/active-org-provider";
 
 interface ScheduleToolbarProps {
   viewType?: "calendar" | "list";
@@ -40,8 +41,9 @@ const ScheduleToolbar = ({
   selectedStatus,
   setSelectedStatus,
 }: ScheduleToolbarProps) =>{
+  const { activeOrgId } = useActiveOrg();
   const { data: channelsData } = useQuery({
-    queryKey: ["channels-connected"],
+    queryKey: ["channels-connected", activeOrgId],
     queryFn: async () => {
       const res = await fetch("/api/channel?filter=connected");
       if (!res.ok) throw new Error("Failed to fetch channels");
