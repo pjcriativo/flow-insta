@@ -60,3 +60,8 @@ next-env.d.ts
 .roo
 .trae
 .windsurf
+
+# artefatos de teste local
+scripts/_t*.cjs
+token_*.txt
+ids_*.json
