@@ -6,7 +6,7 @@ const PUBLIC_PATHS = [
   "/",
   "/sign-in",
   "/sign-up",
-  "/api/inngest",
+  "/api/cron", // motor de jobs (protegido por CRON_SECRET no próprio handler)
   "/auth",
   "/invite",
   "/aprovar", // página pública de aprovação (magic link)
