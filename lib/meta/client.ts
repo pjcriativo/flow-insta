@@ -27,13 +27,16 @@ type MetaClientArgs = {
 };
 
 /** Remove o token (e o param access_token) de qualquer string de erro. */
-function sanitizeError(message: string, accessToken: string): string {
+export function sanitizeError(message: string, accessToken: string): string {
   let out = message.split(accessToken).join("[REDACTED]");
   out = out.replace(/access_token=[^&\s"]+/gi, "access_token=[REDACTED]");
   return out;
 }
 
-async function graphFetch(
+/** Base da Graph API (versão configurável). Reusado por publish.ts. */
+export { GRAPH_BASE };
+
+export async function graphFetch(
   url: string,
   init: RequestInit,
   accessToken: string,

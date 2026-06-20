@@ -10,6 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 type Project = {
@@ -161,6 +168,9 @@ export default function ProjectDetailPage({
         )}
       </div>
 
+      {/* Agendar: só quando todos os slides têm imagem gerada. */}
+      {hasSlides && allImagesReady(slides) && <ScheduleCard projectId={projectId} />}
+
       {loadingSlides ? (
         <Skeleton className="h-40 w-full" />
       ) : hasSlides ? (
@@ -309,4 +319,100 @@ function ImageStatusBadge({ status }: { status: string }) {
   if (status === "pending") return <Badge variant="outline">na fila</Badge>;
   if (status === "failed") return <Badge variant="destructive">falhou</Badge>;
   return null;
+}
+
+/** Todos os slides existem e têm imagem 'completed'. */
+function allImagesReady(slides: Slide[] | undefined): boolean {
+  return (
+    !!slides &&
+    slides.length > 0 &&
+    slides.every((s) => s.image_path && s.generation_status === "completed")
+  );
+}
+
+type Channel = {
+  id: string; // channel_type_id
+  type: string;
+  name: string;
+  connected: boolean;
+};
+
+/**
+ * "Enviar pro calendário": escolhe o canal e a data/hora (no fuso local do
+ * navegador) e cria um scheduled_posts via /schedule. O scheduled_at é
+ * convertido para UTC (ISO) antes de enviar; o scheduler publica no horário.
+ */
+function ScheduleCard({ projectId }: { projectId: string }) {
+  const [channelTypeId, setChannelTypeId] = useState<string>("");
+  const [when, setWhen] = useState<string>("");
+
+  const { data: channels } = useQuery({
+    queryKey: ["channels-connected"],
+    queryFn: async (): Promise<Channel[]> => {
+      const res = await fetch("/api/channel?filter=connected");
+      if (!res.ok) return [];
+      return (await res.json()).channels ?? [];
+    },
+  });
+
+  // Instagram é o destino primário deste recurso; outros canais conectados
+  // também aparecem (o post é o mesmo).
+  const options = (channels ?? []).filter((c) => c.connected);
+
+  const schedule = useMutation({
+    mutationFn: async () => {
+      if (!channelTypeId) throw new Error("Escolha um canal");
+      if (!when) throw new Error("Escolha a data e hora");
+      // datetime-local é no fuso local; converte para UTC ISO.
+      const iso = new Date(when).toISOString();
+      const res = await fetch(`/api/content-projects/${projectId}/schedule`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel_type_id: channelTypeId, scheduled_at: iso, status: "queue" }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Falha ao agendar");
+    },
+    onSuccess: () => toast.success("Agendado! O post será publicado no horário."),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Agendar publicação</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {options.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            Nenhum canal conectado. Conecte um canal (ex.: Instagram) para agendar.
+          </p>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Canal</Label>
+              <Select value={channelTypeId} onValueChange={setChannelTypeId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha o canal" />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Data e hora</Label>
+              <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
+            </div>
+            <Button onClick={() => schedule.mutate()} disabled={schedule.isPending}>
+              {schedule.isPending ? "Agendando…" : "Enviar pro calendário"}
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

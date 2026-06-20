@@ -4,6 +4,7 @@ import { decrypt, encrypt } from "@/lib/encryption";
 import { refreshOauthToken } from "@/lib/social-oauth";
 import { ChannelTypeEnum } from "@/constants/channels";
 import { canPublish } from "@/lib/approvals/publish-gate";
+import { publishInstagramPost, inferMediaType } from "@/lib/meta/publish";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL!;
 
@@ -101,6 +102,13 @@ export async function runPublishPost(postId: string) {
         authorId: post.user_channels?.provider_account_id,
         images: post.images,
       });
+    } else if (providerType === ChannelTypeEnum.INSTAGRAM) {
+      publishedUrl = await publishToInstagram({
+        accessToken: currentAccessToken,
+        caption: post.content,
+        igUserId: post.user_channels?.provider_account_id,
+        images: post.images,
+      });
     } else {
       throw new Error(`Unsupported provider type: ${providerType}`);
     }
@@ -164,6 +172,39 @@ async function saveRefreshedToken(
     })
     .eq("id", userChannelId);
   if (error) throw error;
+}
+
+// ---- Publicação Instagram (Content Publishing API) ----
+
+/**
+ * Publica no Instagram via lib/meta/publish (container -> espera FINISHED ->
+ * media_publish). Token por canal (descriptografado na borda). As mídias usam
+ * as URLs públicas do Storage (bucket público) para o IG baixar server-side.
+ */
+async function publishToInstagram({
+  accessToken,
+  caption,
+  igUserId,
+  images,
+}: {
+  accessToken: string;
+  caption: string;
+  igUserId?: string | null;
+  images?: ImageObject[];
+}): Promise<string | null> {
+  if (!igUserId) throw new Error("Instagram: provider_account_id (IG user id) ausente");
+  const mediaUrls = (images ?? []).map((i) => i.url).filter(Boolean);
+  if (mediaUrls.length === 0) throw new Error("Instagram: post sem mídia (imagem obrigatória)");
+
+  const result = await publishInstagramPost({
+    token: accessToken,
+    igUserId,
+    mediaType: inferMediaType(mediaUrls),
+    caption,
+    mediaUrls,
+  });
+  if (!result.ok) throw new Error(result.error);
+  return result.permalink;
 }
 
 // ---- Publicação Twitter / LinkedIn (extraído de publish-scheduled-posts.ts) ----
