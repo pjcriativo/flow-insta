@@ -2,7 +2,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { validateTokenOnly } from "@/lib/approvals/public-guard";
 import { rateLimit, getClientIp } from "@/lib/approvals/rate-limit";
 import { recomputeCollectionStatus } from "@/lib/approvals/rollup";
-import { inngest } from "@/inngest/client";
+import { runApprovalNotify } from "@/lib/jobs/approval-notify";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -105,19 +105,16 @@ export async function POST(request: NextRequest) {
   // Recalcula o status da coleção a partir dos itens.
   await recomputeCollectionStatus(ctx.collection_id);
 
-  // Notificação (Inngest). Falha de envio não quebra a decisão.
+  // Notificação (inline, best-effort). Falha de envio não quebra a decisão.
   try {
-    await inngest.send({
-      name: "approval/decision.made",
-      data: {
-        collection_id: ctx.collection_id,
-        organization_id: ctx.organization_id,
-        collection_item_id,
-        decision,
-      },
+    await runApprovalNotify({
+      collection_id: ctx.collection_id,
+      organization_id: ctx.organization_id,
+      collection_item_id,
+      decision,
     });
   } catch (e) {
-    console.error("Failed to emit approval event:", e);
+    console.error("Failed to send approval notification:", e);
   }
 
   return NextResponse.json({ success: true });

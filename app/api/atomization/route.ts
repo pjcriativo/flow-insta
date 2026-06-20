@@ -4,7 +4,6 @@ import { planLimitResponse } from "@/lib/plan-limits";
 import { CreateJobInputSchema } from "@/lib/atomization/schemas";
 import { fetchYouTubeMeta } from "@/lib/atomization/youtube";
 import { enforceAtomizationQuota } from "@/lib/atomization/quota";
-import { inngest } from "@/inngest/client";
 import { NextRequest, NextResponse } from "next/server";
 
 // GET /api/atomization — lista os jobs da org ativa.
@@ -94,22 +93,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Falha ao criar job" }, { status: 500 });
     }
 
-    // Dispara o pipeline assíncrono.
-    try {
-      await inngest.send({
-        name: "atomization/job.created",
-        data: { jobId: job.id, organizationId: orgId },
-      });
-    } catch (e) {
-      console.error("Failed to emit atomization event:", e);
-      // Marca o job como falho se nem conseguiu enfileirar.
-      await supabase
-        .from("atomization_jobs")
-        .update({ status: "failed", error: "Falha ao iniciar o processamento" })
-        .eq("id", job.id);
-      return NextResponse.json({ error: "Falha ao iniciar o processamento" }, { status: 500 });
-    }
-
+    // O job foi criado com status 'queued'. O motor de jobs (/api/cron/tick,
+    // disparado pelo pg_cron) o processa na próxima passada. Sem evento.
     return NextResponse.json({ id: job.id }, { status: 201 });
   } catch (error) {
     const authErr = authErrorResponse(error);
