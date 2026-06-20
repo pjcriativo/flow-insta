@@ -14,6 +14,7 @@ import { INTENTS, ACTION_TYPES, type Intent, type ActionType } from "@/types/dm-
 import { RulesEditor } from "./rules-editor";
 import { FaqEditor } from "./faq-editor";
 import { FlowEditor } from "./flow-editor";
+import { KeywordsEditor } from "./keywords-editor";
 
 export type ChannelOption = { id: string; handle: string | null; typeName: string };
 
@@ -23,6 +24,7 @@ type Config = {
   kill_switch: boolean;
   require_human_review: boolean;
   min_confidence: number;
+  agent_prompt?: string;
 };
 
 async function fetchConfigs(): Promise<Config[]> {
@@ -127,6 +129,7 @@ function ChannelAutomation({
     kill_switch: false,
     require_human_review: true,
     min_confidence: 0.75,
+    agent_prompt: "",
   };
 
   const mutation = useMutation({
@@ -225,8 +228,30 @@ function ChannelAutomation({
               className="max-w-[140px]"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="agent_prompt">Instruções do agente</Label>
+            <p className="text-xs text-muted-foreground">
+              System prompt do agente: como ele deve se comportar, o que pode
+              oferecer, o que evitar. Aplicado junto da voz da marca.
+            </p>
+            <textarea
+              id="agent_prompt"
+              rows={4}
+              defaultValue={config.agent_prompt ?? ""}
+              disabled={!canEdit || mutation.isPending}
+              onBlur={(e) => {
+                const v = e.target.value;
+                if (v !== (config.agent_prompt ?? "")) patch({ agent_prompt: v });
+              }}
+              placeholder="Ex.: Você é o assistente da marca. Seja breve e cordial. Ofereça o link do catálogo quando perguntarem preço. Nunca prometa prazos de entrega."
+              className="w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
+            />
+          </div>
         </CardContent>
       </Card>
+
+      {/* PALAVRAS-CHAVE (resposta pronta antes do LLM) */}
+      <KeywordsEditor canEdit={canEdit} />
 
       {/* REGRAS POR INTENÇÃO */}
       <RulesEditor

@@ -1,6 +1,6 @@
 import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { runClassify } from "./classify";
-import { runDecideAndAct } from "./decide-and-act";
+import { runDecideAndAct, tryKeywordResponse } from "./decide-and-act";
 import { runAdvanceFlow } from "./advance-flow";
 import type { EventRow } from "./types";
 
@@ -34,9 +34,13 @@ export async function runDmPilotStep(event: EventRow, nowMs: number): Promise<st
 
   try {
     switch (event.status) {
-      case "received":
-        await runClassify(event);
+      case "received": {
+        // Camada determinística (zip): se uma keyword casa, responde a resposta
+        // pronta e marca 'actioned' SEM chamar o LLM. Senão, classifica.
+        const handled = await tryKeywordResponse(event);
+        if (!handled) await runClassify(event);
         break;
+      }
       case "classified":
         // DM de entrada segue o fluxo de conversa; comentário/menção -> regra.
         if (event.type === "message") {

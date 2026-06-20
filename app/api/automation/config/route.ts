@@ -14,6 +14,7 @@ const upsertSchema = z.object({
   require_human_review: z.boolean().optional(),
   min_confidence: z.number().min(0).max(1).optional(),
   brand_voice_id: z.string().uuid().nullable().optional(),
+  agent_prompt: z.string().max(4000).optional(),
 });
 
 // GET /api/automation/config — lista as configs da org ativa.

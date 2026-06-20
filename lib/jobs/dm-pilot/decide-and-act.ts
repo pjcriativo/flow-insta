@@ -10,6 +10,7 @@ import {
   type ReplyResult,
 } from "@/lib/dm-pilot/prompts";
 import { evaluateWindow, canSendDm } from "@/lib/dm-pilot/window";
+import { matchKeyword, type KeywordRow } from "@/lib/dm-pilot/keywords";
 import type { ActionType, Intent } from "@/types/dm-pilot";
 import type { EventRow } from "./types";
 
@@ -33,6 +34,7 @@ type Config = {
   kill_switch: boolean;
   require_human_review: boolean;
   min_confidence: number;
+  agent_prompt: string;
 };
 
 type Rule = { action_type: ActionType; prompt_template: string | null };
@@ -44,6 +46,14 @@ export async function runDecideAndAct(event: EventRow, nowMs: number): Promise<v
 
   // Automação desligada -> ignora silenciosamente.
   if (!config || !config.enabled) {
+    await setStatus(event.id, "ignored");
+    return;
+  }
+
+  // INVARIANTE #10: conversa silenciada (agent_active=false / do_not_contact)
+  // -> o agente não responde.
+  const gate = await loadConversationGate(admin, event.channel_id, event.external_user_id);
+  if (gate && (gate.agent_active === false || gate.do_not_contact === true)) {
     await setStatus(event.id, "ignored");
     return;
   }
@@ -79,7 +89,12 @@ export async function runDecideAndAct(event: EventRow, nowMs: number): Promise<v
   }
 
   // Ações que geram texto na voz da marca: public_reply, private_reply, route_dm.
-  const voice = await getDmPilotVoice(admin, event.organization_id, event.channel_id);
+  const brandVoice = await getDmPilotVoice(admin, event.organization_id, event.channel_id);
+  // agent_prompt (editável pelo usuário) tem prioridade e é prefixado à voz da
+  // marca — o operador instrui o agente; a voz dá tom/estilo.
+  const voice = config.agent_prompt?.trim()
+    ? `${config.agent_prompt.trim()}\n\n${brandVoice}`
+    : brandVoice;
   const faq = await loadFaq(admin, event.organization_id, event.channel_id);
 
   const replyChannel =
@@ -107,6 +122,128 @@ export async function runDecideAndAct(event: EventRow, nowMs: number): Promise<v
     action_type: action,
     text: generated.text,
     isPromotional: generated.isPromotional,
+  });
+}
+
+// ---------------------------------------------------------
+// CAMADA DETERMINÍSTICA (zip): keyword -> resposta pronta, ANTES do LLM.
+//
+// Chamado no início do pipeline (status 'received'). Se o texto casa uma
+// keyword_responses ativa, envia a resposta pronta e marca 'actioned' SEM
+// chamar o classificador. Respeita: automação ligada, kill-switch (#5),
+// agent_active/do_not_contact (#10). Retorna true se TRATOU o evento.
+// ---------------------------------------------------------
+export async function tryKeywordResponse(event: EventRow): Promise<boolean> {
+  const admin = getSupabaseAdminClient();
+  const text = event.text ?? "";
+  if (!text.trim()) return false;
+
+  const config = await loadConfig(admin, event.organization_id, event.channel_id);
+  if (!config || !config.enabled) return false; // automação off -> deixa o fluxo normal decidir
+
+  // INVARIANTE #10: conversa silenciada -> nem keyword responde.
+  const conv = await loadConversationGate(admin, event.channel_id, event.external_user_id);
+  if (conv && (conv.agent_active === false || conv.do_not_contact === true)) {
+    await setStatus(event.id, "ignored");
+    return true;
+  }
+
+  const rows = await loadKeywords(admin, event.organization_id, event.channel_id);
+  const match = matchKeyword(text, rows);
+  if (!match) return false;
+
+  // Define o canal de resposta: comentário/menção -> resposta pública; DM -> DM.
+  const actionType: ActionType = event.type === "message" ? "route_dm" : "public_reply";
+
+  // INVARIANTE #5: kill-switch -> registra skipped, não envia.
+  if (config.kill_switch) {
+    await recordAction(admin, event, actionType, "skipped", {
+      provider_message_id: null,
+      error: "kill_switch",
+      payload: { text: match.response_message, from: "keyword", keyword: match.keyword },
+    });
+    await setStatus(event.id, "actioned");
+    return true;
+  }
+
+  const token = await getChannelToken(event.channel_id);
+  if (!token) {
+    await recordAction(admin, event, actionType, "failed", {
+      provider_message_id: null,
+      error: "missing_channel_token",
+      payload: { text: match.response_message, from: "keyword" },
+    });
+    await setStatus(event.id, "failed");
+    return true;
+  }
+
+  const meta = createMetaClient({ accessToken: token.accessToken, igAccountId: token.providerAccountId });
+  const result = await dispatch(meta, actionType, event, match.response_message);
+
+  await recordAction(admin, event, actionType, result.ok ? "sent" : "failed", {
+    provider_message_id: result.ok ? result.providerMessageId : null,
+    error: result.ok ? null : result.error,
+    payload: { text: match.response_message, from: "keyword", keyword: match.keyword },
+  });
+
+  // Registra a mensagem de saída na conversa (best-effort).
+  if (result.ok) {
+    await recordOutboundMessage(admin, event, match.response_message, result.providerMessageId);
+  }
+
+  await setStatus(event.id, result.ok ? "actioned" : "failed");
+  return true;
+}
+
+async function loadKeywords(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  orgId: string,
+  channelId: string
+): Promise<KeywordRow[]> {
+  const { data } = await admin
+    .from("keyword_responses")
+    .select("id, keyword, variations, response_message, active")
+    .eq("organization_id", orgId)
+    .eq("active", true)
+    .or(`channel_id.eq.${channelId},channel_id.is.null`);
+  return (data as KeywordRow[] | null) ?? [];
+}
+
+async function loadConversationGate(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  channelId: string,
+  externalUserId: string | null
+): Promise<{ agent_active: boolean; do_not_contact: boolean } | null> {
+  if (!externalUserId) return null;
+  const { data } = await admin
+    .from("conversations")
+    .select("agent_active, do_not_contact")
+    .eq("channel_id", channelId)
+    .eq("external_user_id", externalUserId)
+    .maybeSingle();
+  return (data as { agent_active: boolean; do_not_contact: boolean } | null) ?? null;
+}
+
+async function recordOutboundMessage(
+  admin: ReturnType<typeof getSupabaseAdminClient>,
+  event: EventRow,
+  text: string,
+  providerMessageId: string | null
+): Promise<void> {
+  if (!event.external_user_id) return;
+  const { data: conv } = await admin
+    .from("conversations")
+    .select("id")
+    .eq("channel_id", event.channel_id)
+    .eq("external_user_id", event.external_user_id)
+    .maybeSingle();
+  if (!conv) return;
+  await admin.from("conversation_messages").insert({
+    conversation_id: (conv as { id: string }).id,
+    organization_id: event.organization_id,
+    direction: "out",
+    text,
+    provider_message_id: providerMessageId,
   });
 }
 
@@ -244,6 +381,7 @@ export async function sendApprovedAction(args: {
     kill_switch: false,
     require_human_review: true,
     min_confidence: 0,
+    agent_prompt: "",
   };
 
   // Texto editado pelo revisor não passa pelo classificador de promo da IA;
@@ -302,11 +440,12 @@ async function loadConfig(
 ): Promise<Config | null> {
   const { data } = await admin
     .from("automation_configs")
-    .select("enabled, kill_switch, require_human_review, min_confidence")
+    .select("enabled, kill_switch, require_human_review, min_confidence, agent_prompt")
     .eq("organization_id", orgId)
     .eq("channel_id", channelId)
     .maybeSingle();
-  return (data as Config | null) ?? null;
+  if (!data) return null;
+  return { ...(data as Omit<Config, "agent_prompt">), agent_prompt: (data as { agent_prompt?: string }).agent_prompt ?? "" };
 }
 
 async function loadRule(
