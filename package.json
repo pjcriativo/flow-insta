@@ -10,7 +10,9 @@
     "start": "next start",
     "lint": "eslint",
     "test:token": "tsx scripts/verify-approval-token.ts",
-    "test:atomization": "tsx scripts/verify-atomization-schemas.ts"
+    "test:atomization": "tsx scripts/verify-atomization-schemas.ts",
+    "test": "vitest run",
+    "test:rls": "vitest run tests/rls-isolation.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -55,6 +57,7 @@
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }
