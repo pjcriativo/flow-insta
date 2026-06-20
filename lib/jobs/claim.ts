@@ -47,3 +47,27 @@ export async function claimDuePosts(limit: number, lease = DEFAULT_LEASE): Promi
   }
   return (data ?? []).map((p: { id: string }) => p.id);
 }
+
+/**
+ * Reivindica até `limit` projetos de conteúdo em 'generating' (fora de backoff,
+ * lease livre/expirado), marcando o lease. Atômico via RPC com SKIP LOCKED.
+ * Retorna os ids reivindicados.
+ */
+export async function claimDueContentProjects(
+  limit: number,
+  lease = DEFAULT_LEASE
+): Promise<Array<{ id: string; attempts: number }>> {
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin.rpc("claim_due_content_projects", {
+    p_limit: limit,
+    p_lease: lease,
+  });
+  if (error) {
+    console.error("[claim] claim_due_content_projects falhou", error.message);
+    return [];
+  }
+  return (data ?? []).map((p: { id: string; attempts: number }) => ({
+    id: p.id,
+    attempts: p.attempts,
+  }));
+}

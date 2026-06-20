@@ -1,11 +1,14 @@
-import { claimAtomizationJobs, claimDuePosts } from "./claim";
+import { claimAtomizationJobs, claimDuePosts, claimDueContentProjects } from "./claim";
 import { runAtomizationStep } from "./atomization/runner";
 import { runPublishPost } from "./publish";
 import { runDmPilotTick } from "./dm-pilot/tick";
+import { runContentImagesStep } from "./content/runner";
 
 // Tetos por chamada do tick (protegem contra estouro de tempo serverless).
 const PUBLISH_LIMIT = 10;
 const ATOM_JOBS_PER_TICK = 5;
+// Imagem é cara/lenta: poucos projetos por tick (cada um pode ter N slides).
+const CONTENT_IMAGE_LIMIT = 2;
 
 /**
  * Processa os posts agendados vencidos: reivindica (queue -> publishing) e
@@ -76,10 +79,30 @@ export async function runAtomizationTick({
   return { stepsRun, advanced };
 }
 
-/** Executa o tick completo (publicação + atomização + DM Pilot). */
+/**
+ * Gera imagens dos projetos de conteúdo reivindicáveis (status 'generating').
+ * Claim por lease (SKIP LOCKED): dois ticks nunca pegam o mesmo projeto. Cada
+ * projeto gera suas imagens slide a slide de forma idempotente.
+ */
+export async function runContentImageTick({ limit = CONTENT_IMAGE_LIMIT } = {}) {
+  const projects = await claimDueContentProjects(limit);
+  let processed = 0;
+  for (const project of projects) {
+    try {
+      await runContentImagesStep(project);
+      processed++;
+    } catch (e) {
+      console.error("[tick] runContentImagesStep erro", project.id, String(e));
+    }
+  }
+  return { claimed: projects.length, processed };
+}
+
+/** Executa o tick completo (publicação + atomização + DM Pilot + imagens). */
 export async function runTick({ startedAt = Date.now(), budgetMs = 50_000 } = {}) {
   const publish = await runPublishTick();
   const atomization = await runAtomizationTick({ startedAt, budgetMs });
   const dmPilot = await runDmPilotTick({ startedAt, budgetMs });
-  return { publish, atomization, dmPilot, ms: Date.now() - startedAt };
+  const contentImages = await runContentImageTick();
+  return { publish, atomization, dmPilot, contentImages, ms: Date.now() - startedAt };
 }
