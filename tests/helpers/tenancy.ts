@@ -76,7 +76,7 @@ export async function createTenant(role: "owner" | "admin" | "member"): Promise<
 
 // IDs das linhas semeadas por tabela, para conferência por org.
 export type SeededRows = {
-  brand_voice_profiles: string;
+  brand_profiles: string;
   atomization_jobs: string;
   atomization_transcripts: string;
   atomization_clips: string;
@@ -144,11 +144,12 @@ export async function seedAllTables(t: Tenant): Promise<SeededRows> {
     status: "draft",
   });
 
-  // --- atomization_* + brand_voice ---
-  const brand_voice_profiles = await ins(a, "brand_voice_profiles", {
+  // --- atomization_* + brand (marca fundida: visual + voz) ---
+  const brand_profiles = await ins(a, "brand_profiles", {
     organization_id: org,
     channel_id: channelId,
-    summary: `${TEST_TAG} voz`,
+    brand_name: `${TEST_TAG} marca`,
+    voice_summary: `${TEST_TAG} voz`,
   });
   const atomization_jobs = await ins(a, "atomization_jobs", {
     organization_id: org,
@@ -275,7 +276,7 @@ export async function seedAllTables(t: Tenant): Promise<SeededRows> {
   });
 
   return {
-    brand_voice_profiles,
+    brand_profiles,
     atomization_jobs,
     atomization_transcripts,
     atomization_clips,

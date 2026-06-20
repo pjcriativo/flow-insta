@@ -11,7 +11,7 @@ import {
 
 // ============================================================
 // Teste de integração: isolamento multi-tenant (RLS) das tabelas dos
-// recursos novos (atomization_*, brand_voice_profiles, dm-pilot, approvals,
+// recursos novos (atomization_*, brand_profiles, dm-pilot, approvals,
 // workspace_branding). Bate no Supabase REAL.
 //
 // O teste FALHA se qualquer policy estiver ausente/frouxa: se a org A
@@ -22,7 +22,7 @@ import {
 
 // Todas as 21 tabelas que devem isolar por organization_id.
 const TENANT_TABLES = [
-  "brand_voice_profiles",
+  "brand_profiles",
   "atomization_jobs",
   "atomization_transcripts",
   "atomization_clips",

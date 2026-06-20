@@ -4,10 +4,10 @@ import { getVoiceInstruction } from "@/lib/atomization/voice";
 // ============================================================
 // Voz da marca para as respostas do DM Pilot.
 //
-// Reusa o seletor de perfil da Atomização (brand_voice_profiles): canal mais
-// específico -> org -> fallback genérico. Aqui só damos um ponto de entrada
-// nomeado para o recurso e deixamos espaço para preferir um brand_voice_id
-// explícito vindo de automation_configs.
+// Reusa o seletor de perfil da Atomização (brand_profiles, colunas voice_*):
+// canal mais específico -> org -> fallback genérico. Aqui só damos um ponto de
+// entrada nomeado para o recurso e deixamos espaço para preferir um
+// brand_voice_id explícito vindo de automation_configs.
 // ============================================================
 
 /**

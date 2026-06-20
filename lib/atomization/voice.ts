@@ -13,6 +13,23 @@ type BrandVoiceRow = {
   exemplars: unknown;
 };
 
+// Colunas de voz na tabela fundida brand_profiles. Lemos as três e
+// re-rotulamos para o shape interno (summary/tone/exemplars) que o resto deste
+// módulo já consome — assim a fusão de tabelas não vazou para buildInstruction.
+const VOICE_COLUMNS = "voice_summary, voice_tone, voice_exemplars";
+
+function toVoiceRow(data: {
+  voice_summary: string | null;
+  voice_tone: unknown;
+  voice_exemplars: unknown;
+}): BrandVoiceRow {
+  return {
+    summary: data.voice_summary,
+    tone: data.voice_tone,
+    exemplars: data.voice_exemplars,
+  };
+}
+
 /**
  * Retorna a instrução de voz da marca para injetar nos prompts de copy.
  *
@@ -21,9 +38,9 @@ type BrandVoiceRow = {
  *   2. perfil geral da org (channel_id null) →
  *   3. fallback genérico.
  *
- * Lê `brand_voice_profiles` e converte `summary`/`tone`/`exemplars` em uma
- * instrução em linguagem natural. Nunca lança: qualquer dado ausente ou
- * malformado degrada para o fallback genérico.
+ * Lê `brand_profiles` (colunas voice_*) e converte em uma instrução em
+ * linguagem natural. Nunca lança: qualquer dado ausente ou malformado degrada
+ * para o fallback genérico.
  */
 export async function getVoiceInstruction(
   admin: SupabaseClient,
@@ -48,22 +65,22 @@ async function loadProfile(
 ): Promise<BrandVoiceRow | null> {
   if (channelId) {
     const { data } = await admin
-      .from("brand_voice_profiles")
-      .select("summary, tone, exemplars")
+      .from("brand_profiles")
+      .select(VOICE_COLUMNS)
       .eq("organization_id", organizationId)
       .eq("channel_id", channelId)
       .maybeSingle();
-    if (data) return data as BrandVoiceRow;
+    if (data) return toVoiceRow(data as Parameters<typeof toVoiceRow>[0]);
   }
 
   const { data } = await admin
-    .from("brand_voice_profiles")
-    .select("summary, tone, exemplars")
+    .from("brand_profiles")
+    .select(VOICE_COLUMNS)
     .eq("organization_id", organizationId)
     .is("channel_id", null)
     .maybeSingle();
 
-  return (data as BrandVoiceRow | null) ?? null;
+  return data ? toVoiceRow(data as Parameters<typeof toVoiceRow>[0]) : null;
 }
 
 /** Monta a instrução textual a partir das partes do perfil. */
