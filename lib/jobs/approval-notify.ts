@@ -9,19 +9,51 @@ const DECISION_LABEL: Record<string, string> = {
 export type ApprovalNotifyPayload = {
   collection_id: string;
   organization_id: string;
-  collection_item_id: string;
+  collection_item_id: string | null;
   decision: string;
+  decision_id?: string | null;
 };
 
 /**
- * Notifica a agência quando o cliente toma uma decisão de aprovação.
- * Chamada inline pela rota /api/approvals/public/decide (fire-and-forget).
+ * ENFILEIRA a notificação (durável). Chamada pela rota /decide: insere uma
+ * linha 'pending' em approval_notifications e retorna rápido — NÃO envia nem
+ * bloqueia a request (invariante #8). O tick reivindica e envia depois.
+ * Best-effort: falha de insert não quebra a decisão (loga e segue).
+ */
+export async function enqueueApprovalNotification(payload: ApprovalNotifyPayload) {
+  const admin = getSupabaseAdminClient();
+  try {
+    const { error } = await admin.from("approval_notifications").insert({
+      organization_id: payload.organization_id,
+      collection_id: payload.collection_id,
+      collection_item_id: payload.collection_item_id,
+      decision_id: payload.decision_id ?? null,
+      decision: payload.decision,
+      channel: "email",
+      status: "pending",
+      payload: {},
+    });
+    if (error) {
+      console.error("[approval-notify] enqueue falhou", error.message);
+      return { enqueued: false };
+    }
+    return { enqueued: true };
+  } catch (e) {
+    console.error("[approval-notify] enqueue erro", String(e));
+    return { enqueued: false };
+  }
+}
+
+/**
+ * ENVIA a notificação à agência (e-mail + WhatsApp). Chamada pelo tick a partir
+ * de uma linha reivindicada da fila. Best-effort no canal, mas o resultado
+ * informa o tick se deve marcar 'sent' ou reagendar.
  *
  * E-mail via Resend; se RESEND_API_KEY não estiver setado, vira no-op (log).
  * WhatsApp via Cloud API só se WHATSAPP_CLOUD_TOKEN + WHATSAPP_PHONE_NUMBER_ID
- * + WHATSAPP_NOTIFY_TO estiverem setados. Nunca lança: best-effort.
+ * + WHATSAPP_NOTIFY_TO estiverem setados.
  */
-export async function runApprovalNotify(payload: ApprovalNotifyPayload) {
+export async function sendApprovalNotification(payload: ApprovalNotifyPayload) {
   const { collection_id, organization_id, collection_item_id, decision } = payload;
   const admin = getSupabaseAdminClient();
 
@@ -67,7 +99,7 @@ async function sendEmail(args: {
   fromName: string;
   collection: { client_name: string; title: string; status: string };
   verb: string;
-  collection_item_id: string;
+  collection_item_id: string | null;
 }) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {

@@ -3,6 +3,7 @@ import { runAtomizationStep } from "./atomization/runner";
 import { runPublishPost } from "./publish";
 import { runDmPilotTick } from "./dm-pilot/tick";
 import { runContentImagesStep } from "./content/runner";
+import { runApprovalNotifyTick } from "./approval-notify-tick";
 
 // Tetos por chamada do tick (protegem contra estouro de tempo serverless).
 const PUBLISH_LIMIT = 10;
@@ -98,11 +99,12 @@ export async function runContentImageTick({ limit = CONTENT_IMAGE_LIMIT } = {}) 
   return { claimed: projects.length, processed };
 }
 
-/** Executa o tick completo (publicação + atomização + DM Pilot + imagens). */
+/** Executa o tick completo (publicação + atomização + DM Pilot + imagens + notificações). */
 export async function runTick({ startedAt = Date.now(), budgetMs = 50_000 } = {}) {
   const publish = await runPublishTick();
   const atomization = await runAtomizationTick({ startedAt, budgetMs });
   const dmPilot = await runDmPilotTick({ startedAt, budgetMs });
   const contentImages = await runContentImageTick();
-  return { publish, atomization, dmPilot, contentImages, ms: Date.now() - startedAt };
+  const approvalNotify = await runApprovalNotifyTick();
+  return { publish, atomization, dmPilot, contentImages, approvalNotify, ms: Date.now() - startedAt };
 }

@@ -2,7 +2,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase-server";
 import { validateTokenOnly } from "@/lib/approvals/public-guard";
 import { rateLimit, getClientIp } from "@/lib/approvals/rate-limit";
 import { recomputeCollectionStatus } from "@/lib/approvals/rollup";
-import { runApprovalNotify } from "@/lib/jobs/approval-notify";
+import { enqueueApprovalNotification } from "@/lib/jobs/approval-notify";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -70,15 +70,19 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   // Append-only: INSERT em approval_decisions (nunca update/delete).
-  const { error: decErr } = await admin.from("approval_decisions").insert({
-    collection_item_id,
-    collection_id: ctx.collection_id,
-    organization_id: ctx.organization_id,
-    session_id: session?.id ?? null,
-    decision,
-    comment: comment ?? null,
-    decided_by_email: decided_by_email ?? null,
-  });
+  const { data: decisionRow, error: decErr } = await admin
+    .from("approval_decisions")
+    .insert({
+      collection_item_id,
+      collection_id: ctx.collection_id,
+      organization_id: ctx.organization_id,
+      session_id: session?.id ?? null,
+      decision,
+      comment: comment ?? null,
+      decided_by_email: decided_by_email ?? null,
+    })
+    .select("id")
+    .single();
   if (decErr) {
     console.error("Error inserting decision:", decErr);
     return NextResponse.json({ error: "Falha ao registrar decisão" }, { status: 500 });
@@ -105,17 +109,15 @@ export async function POST(request: NextRequest) {
   // Recalcula o status da coleção a partir dos itens.
   await recomputeCollectionStatus(ctx.collection_id);
 
-  // Notificação (inline, best-effort). Falha de envio não quebra a decisão.
-  try {
-    await runApprovalNotify({
-      collection_id: ctx.collection_id,
-      organization_id: ctx.organization_id,
-      collection_item_id,
-      decision,
-    });
-  } catch (e) {
-    console.error("Failed to send approval notification:", e);
-  }
+  // Notificação DURÁVEL: enfileira (não bloqueia a request, invariante #8).
+  // O tick reivindica e envia com retry. Falha de enqueue não quebra a decisão.
+  await enqueueApprovalNotification({
+    collection_id: ctx.collection_id,
+    organization_id: ctx.organization_id,
+    collection_item_id,
+    decision,
+    decision_id: decisionRow?.id ?? null,
+  });
 
   return NextResponse.json({ success: true });
 }
