@@ -5,6 +5,11 @@ import { getVideoRenderer } from "@/lib/atomization/renderer";
 // Quantos clips renderizar por chamada (equivale ao antigo concurrency.limit:3).
 const RENDER_BATCH = 3;
 
+// Lease do render por clip: um clip preso em 'rendering' além disto é órfão
+// (o tick que o renderizava morreu antes do catch). Marcamos render_failed
+// para não travar a barreira do job para sempre.
+const RENDER_LEASE_MS = 5 * 60 * 1000;
+
 /**
  * 3ª etapa: renderiza os clips pendentes (lote) e avalia a barreira.
  * Runner puro: chamado pelo tick quando status === 'rendering'.
@@ -24,7 +29,19 @@ export async function runRenderStep(jobId: string): Promise<void> {
 
   const admin = getSupabaseAdminClient();
 
-  // Carrega o lote de clips ainda pendentes (selected ou rendering órfão).
+  // Antes do lote: clips presos em 'rendering' além do lease são órfãos de um
+  // tick que morreu no meio do render. Marca render_failed para a barreira do
+  // job poder fechar (senão o job fica 'rendering' para sempre).
+  const orphanCutoff = new Date(Date.now() - RENDER_LEASE_MS).toISOString();
+  await admin
+    .from("atomization_clips")
+    .update({ status: "render_failed" })
+    .eq("job_id", jobId)
+    .eq("status", "rendering")
+    .lt("updated_at", orphanCutoff);
+
+  // Carrega o lote de clips ainda pendentes (selected; ou rendering recente,
+  // que será simplesmente re-renderizado — idempotente pela chave).
   const { data: pending } = await admin
     .from("atomization_clips")
     .select(

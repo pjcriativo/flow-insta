@@ -41,8 +41,11 @@ export async function runPublishPost(postId: string) {
 
   const userChannel = post.user_channels;
   if (!userChannel) {
-    await markPostFailed(post.id, "Canal não encontrado");
-    return { skipped: true, reason: "user_channel_not_found" };
+    // Post sem canal atribuído (ex.: draft de atomização agendado antes de o
+    // usuário escolher um canal). Não é falha definitiva: volta para 'draft'
+    // para o usuário atribuir um canal, em vez de marcar 'failed'.
+    await revertToDraft(post.id);
+    return { skipped: true, reason: "no_channel_assigned" };
   }
   const channelType = userChannel.channel_types;
   if (!channelType) {
@@ -116,6 +119,11 @@ export async function runPublishPost(postId: string) {
 async function revertToQueue(postId: string) {
   const supabase = getSupabaseAdminClient();
   await supabase.from("scheduled_posts").update({ status: "queue" }).eq("id", postId);
+}
+
+async function revertToDraft(postId: string) {
+  const supabase = getSupabaseAdminClient();
+  await supabase.from("scheduled_posts").update({ status: "draft" }).eq("id", postId);
 }
 
 async function markPostPublished(postId: string, published_url: string | null) {

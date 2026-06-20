@@ -37,6 +37,18 @@ alter table public.scheduled_posts
   check (status in ('draft','queue','publishing','published','failed'));
 
 -- ---------------------------------------------------------
+-- 3b. TRIGGER updated_at em scheduled_posts
+--     scheduled_posts não tinha trigger de updated_at; o reclaim de órfão de
+--     publicação (claim_due_posts: updated_at < now()-lease) depende dele.
+--     Sem isto o updated_at fica congelado na criação e o reclaim re-publica
+--     durante a publicação ativa (publicação DUPLICADA).
+-- ---------------------------------------------------------
+drop trigger if exists set_updated_at on public.scheduled_posts;
+create trigger set_updated_at
+  before update on public.scheduled_posts
+  for each row execute function public.update_updated_at_column();
+
+-- ---------------------------------------------------------
 -- 4. ÍNDICES PARA OS POLLS
 -- ---------------------------------------------------------
 create index if not exists idx_atom_jobs_claimable
@@ -107,7 +119,12 @@ begin
     for update skip locked
   )
   update public.scheduled_posts p
-  set status = 'publishing'
+  set status = 'publishing',
+      updated_at = now() -- CRÍTICO: marca o instante do claim; o reclaim de
+                         -- órfão (updated_at < now()-lease) só dispara se o
+                         -- tick que reivindicou realmente morreu. Sem isto, o
+                         -- updated_at fica congelado na criação do post e o
+                         -- reclaim re-publica durante a publicação ativa.
   from candidates c
   where p.id = c.id
   returning p.*;
