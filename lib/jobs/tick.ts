@@ -1,6 +1,7 @@
 import { claimAtomizationJobs, claimDuePosts } from "./claim";
 import { runAtomizationStep } from "./atomization/runner";
 import { runPublishPost } from "./publish";
+import { runDmPilotTick } from "./dm-pilot/tick";
 
 // Tetos por chamada do tick (protegem contra estouro de tempo serverless).
 const PUBLISH_LIMIT = 10;
@@ -75,9 +76,10 @@ export async function runAtomizationTick({
   return { stepsRun, advanced };
 }
 
-/** Executa o tick completo (publicação + atomização). */
+/** Executa o tick completo (publicação + atomização + DM Pilot). */
 export async function runTick({ startedAt = Date.now(), budgetMs = 50_000 } = {}) {
   const publish = await runPublishTick();
   const atomization = await runAtomizationTick({ startedAt, budgetMs });
-  return { publish, atomization, ms: Date.now() - startedAt };
+  const dmPilot = await runDmPilotTick({ startedAt, budgetMs });
+  return { publish, atomization, dmPilot, ms: Date.now() - startedAt };
 }
